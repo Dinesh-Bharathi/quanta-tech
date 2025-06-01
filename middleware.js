@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
-import { rateLimiter } from "@/lib/rateLimit.js";
+import { rateLimiter } from "@/lib/ratelimit.js";
 import { verifyToken } from "@/controllers/auth.controller.js";
 
-const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/api/auth"];
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/api/auth",
+];
 
 function isPublic(pathname) {
   return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));

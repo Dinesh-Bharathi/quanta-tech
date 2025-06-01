@@ -67,7 +67,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const getTentDetails = useCallback(async () => {
-    if (!user?.tentUuid) return;
+    if (!user?.tentUuid) {
+      setloadingOrg(false); // ✅ Set loadingOrg to false if nothing to fetch
+      return;
+    }
 
     try {
       const response = await axiosInstance.get(
@@ -79,7 +82,7 @@ export const AuthProvider = ({ children }) => {
       console.error("Failed to fetch tent details:", err);
       setTentDetails(null);
     } finally {
-      setloadingOrg(false);
+      setloadingOrg(false); // ✅ Always unset loadingOrg
     }
   }, [user?.tentUuid]);
 
@@ -87,7 +90,7 @@ export const AuthProvider = ({ children }) => {
     if (user?.tentUuid) {
       getTentDetails();
     }
-  }, [getTentDetails]);
+  }, [getTentDetails, user?.tentUuid]);
 
   return (
     <AuthContext.Provider
