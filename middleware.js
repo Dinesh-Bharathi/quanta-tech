@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { rateLimiter } from "@/lib/rateLimit";
+import { rateLimiter } from "@/lib/rateLimit.js";
 import { verifyToken } from "@/controllers/auth.controller.js";
 
 const PUBLIC_ROUTES = ["/login", "/register", "/forgot-password", "/api/auth"];
