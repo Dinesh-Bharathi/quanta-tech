@@ -14,6 +14,14 @@ import Loading from "@/app/loading";
 
 const AuthContext = createContext();
 
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/api/auth",
+];
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [tentDetails, setTentDetails] = useState(null);
@@ -49,6 +57,7 @@ export const AuthProvider = ({ children }) => {
       }
       return true;
     } catch (err) {
+      const currentPath = window.location.pathname; // Works on client side only
       const redirectPath = searchParams.get("redirect") || "/dashboard";
       const target =
         err.response?.data?.redirect || `/login?redirect=${redirectPath}`;
@@ -56,7 +65,9 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
 
-      router.replace(target);
+      if (!PUBLIC_ROUTES.includes(currentPath)) {
+        router.replace(target);
+      }
     } finally {
       setLoading(false);
     }
