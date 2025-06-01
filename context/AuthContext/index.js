@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
 
   const getTentDetails = useCallback(async () => {
     if (!user?.tentUuid) {
-      setloadingOrg(false); // ✅ Set loadingOrg to false if nothing to fetch
+      setloadingOrg(false);
       return;
     }
 
@@ -82,15 +82,13 @@ export const AuthProvider = ({ children }) => {
       console.error("Failed to fetch tent details:", err);
       setTentDetails(null);
     } finally {
-      setloadingOrg(false); // ✅ Always unset loadingOrg
+      setloadingOrg(false);
     }
   }, [user?.tentUuid]);
 
   useEffect(() => {
-    if (user?.tentUuid) {
-      getTentDetails();
-    }
-  }, [getTentDetails, user?.tentUuid]);
+    getTentDetails();
+  }, [getTentDetails]);
 
   return (
     <AuthContext.Provider
