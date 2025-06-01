@@ -25,7 +25,7 @@ const defaultLayoutConfig = {
 };
 
 export function ThemeCustomizationProvider({ children }) {
-  const [selectedTheme, setSelectedTheme] = useState("candyLand");
+  const [selectedTheme, setSelectedTheme] = useState("default");
   const { theme: mode, resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [layoutConfig, setLayoutConfig] = useState(() => {

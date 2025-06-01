@@ -57,6 +57,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useThemeCustomization } from "../theme-provider";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 const navigation = [
   {
@@ -120,6 +121,7 @@ export function DashboardSidebar({
   isCollapseOffcanvas = false,
 }) {
   const pathname = usePathname();
+  const { logout } = useAuth();
   const { layoutConfig } = useThemeCustomization();
   const [expandedItems, setExpandedItems] = useState(new Set());
 
@@ -430,7 +432,7 @@ export function DashboardSidebar({
                     Security
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => logout()}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>

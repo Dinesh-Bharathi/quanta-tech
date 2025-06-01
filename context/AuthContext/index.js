@@ -11,6 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import axiosInstance from "@/services/network";
 import { decryption } from "@/lib/encryption";
 import Loading from "@/app/loading";
+import { toast } from "sonner";
 
 const AuthContext = createContext();
 
@@ -32,11 +33,13 @@ export const AuthProvider = ({ children }) => {
   const searchParams = useSearchParams();
 
   const login = async (credentials) => {
+    const toastId = toast.loading("Logging in...");
     const redirectPath = searchParams.get("redirect") || "/dashboard";
 
     try {
       await axiosInstance.post("/api/auth/login", credentials);
       await getSession();
+      toast.success("Login successful", { id: toastId });
       router.push(redirectPath);
       return true;
     } catch (err) {
@@ -101,9 +104,30 @@ export const AuthProvider = ({ children }) => {
     getTentDetails();
   }, [getTentDetails]);
 
+  const logout = async () => {
+    const toastId = toast.loading("Logging out...");
+    try {
+      await axiosInstance.post("/api/auth/logout");
+      toast.success("Logout successful", { id: toastId });
+      setUser(null);
+      setIsAuthenticated(false);
+      router.push("/login");
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
   return (
     <AuthContext.Provider
-      value={{ login, user, isAuthenticated, loading, tentDetails }}
+      value={{
+        login,
+        user,
+        isAuthenticated,
+        loading,
+        tentDetails,
+        logout,
+        setUser,
+      }}
     >
       {!loading && !loadingOrg && children}
     </AuthContext.Provider>

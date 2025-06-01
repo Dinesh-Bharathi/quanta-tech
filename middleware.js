@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { rateLimiter } from "@/lib/ratelimit.js";
-import { verifyToken } from "@/controllers/auth.controller.js";
+import {
+  verifyToken,
+  isSessionActive,
+  updateSessionExpiry,
+} from "@/controllers/auth.controller.js";
 
 const PUBLIC_ROUTES = [
   "/",
@@ -14,51 +18,56 @@ function isPublic(pathname) {
   return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
 }
 
+function unauthorized(request) {
+  const pathname = request.nextUrl.pathname;
+
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set("redirect", pathname);
+  return NextResponse.redirect(loginUrl);
+}
+
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
+  const isApiRoute = pathname.startsWith("/api/");
 
-  // 1. Rate limiting for API routes (optional)
-  // if (pathname.startsWith("/api/")) {
+  // Optional: Rate limiting
+  // if (isApiRoute) {
   //   const rateLimitResponse = rateLimiter(request);
   //   if (rateLimitResponse) return rateLimitResponse;
   // }
 
-  // 2. Access token from cookies
-  const accessToken = request.cookies.get("accessToken")?.value;
-
-  // 3. Allow public routes without auth
+  // Skip public routes
   if (isPublic(pathname)) {
     return NextResponse.next();
   }
 
-  // 4. Redirect or return 401 if no token
-  if (!accessToken) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const accessToken = request.cookies.get("accessToken")?.value;
 
-    const loginUrl = new URL("/login", request.url);
-    if (!pathname.startsWith("/api/")) {
-      loginUrl.searchParams.set("redirect", pathname);
-    }
-    return NextResponse.redirect(loginUrl);
-  }
+  if (!accessToken) return unauthorized(request);
 
-  // 5. Verify token
   const isValid = await verifyToken(accessToken);
-  if (!isValid) {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!isValid) return unauthorized(request);
 
-    const loginUrl = new URL("/login", request.url);
-    if (!pathname.startsWith("/api/")) {
-      loginUrl.searchParams.set("redirect", pathname);
-    }
-    return NextResponse.redirect(loginUrl);
+  const isActive = await isSessionActive(accessToken);
+  if (!isActive) return unauthorized(request);
+
+  const didExtend = await updateSessionExpiry(accessToken);
+
+  const response = NextResponse.next();
+
+  if (didExtend) {
+    response.cookies.set("accessToken", accessToken, {
+      httpOnly: true,
+      path: "/",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24, // 1 day in seconds
+      sameSite: "lax",
+    });
   }
-
-  return NextResponse.next();
 }
 
 export const config = {

@@ -41,15 +41,80 @@ export async function createSession(userId) {
   return token;
 }
 
-export async function verifyToken(token) {
+export async function verifyToken(token, maxTokenAgeSeconds = 60 * 60 * 24) {
+  // default 24h
   try {
     const secret = new TextEncoder().encode(process.env.JWT_SECRET);
     const { payload } = await jwtVerify(token, secret);
+
+    // Check token age if iat exists
+    if (payload.iat) {
+      const issuedAt = payload.iat * 1000; // iat in seconds, convert to ms
+      const ageMs = Date.now() - issuedAt;
+
+      if (ageMs > maxTokenAgeSeconds * 1000) {
+        console.warn("Token too old, rejecting");
+        return null;
+      }
+    }
+
     return payload;
   } catch (error) {
     console.error("Token verification failed:", error.message);
     return null;
   }
+}
+
+export async function isSessionActive(token) {
+  const result = await executeQuery({
+    query: `
+      SELECT revoked, expires_at 
+      FROM tbl_sessions 
+      WHERE token = ?
+    `,
+    values: [token],
+  });
+
+  if (result.length === 0) return false;
+
+  const session = result[0];
+  const now = new Date();
+
+  const isExpired = new Date(session.expires_at) <= now;
+  const isRevoked = session.revoked;
+
+  return !(isExpired || isRevoked);
+}
+
+export async function updateSessionExpiry(token) {
+  const thresholdMinutes = 15;
+  const thresholdDate = new Date(Date.now() + thresholdMinutes * 60 * 1000);
+
+  const [session] = await executeQuery({
+    query: `
+      SELECT expires_at FROM tbl_sessions 
+      WHERE token = ? AND revoked = FALSE
+    `,
+    values: [token],
+  });
+
+  if (!session) return;
+
+  const expiresAt = new Date(session.expires_at);
+  if (expiresAt > thresholdDate) return; // Still active enough
+
+  const newExpiry = new Date();
+  newExpiry.setDate(newExpiry.getDate() + 1); // Extend
+
+  await executeQuery({
+    query: `
+      UPDATE tbl_sessions 
+      SET expires_at = ? 
+      WHERE token = ?
+    `,
+    values: [newExpiry, token],
+  });
+  return true;
 }
 
 export async function getCurrentUser() {

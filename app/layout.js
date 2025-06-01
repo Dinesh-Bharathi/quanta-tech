@@ -6,9 +6,10 @@ import { AuthProvider } from "@/context/AuthContext";
 import Loading from "./loading";
 
 export const metadata = {
-  title: "Quanta Dashboard",
-  description: "Multi-tenant SaaS dashboard application",
-  generator: "v0.dev",
+  title: "QuantaBill - Product Billing & Inventory Management",
+  description:
+    "QuantaBill is a powerful SaaS solution for product billing and inventory management. Streamline your business operations with precision, real-time insights, and easy-to-use tools.",
+  generator: "Quanta Tech",
 };
 
 export default function RootLayout({ children }) {
