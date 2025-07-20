@@ -25,7 +25,7 @@ import {
   Mail,
   Phone,
 } from "lucide-react";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 
 // Mock API functions

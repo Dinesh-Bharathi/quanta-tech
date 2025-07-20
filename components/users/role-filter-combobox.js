@@ -19,16 +19,11 @@ import {
 } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 
-const roles = [
-  { value: "Admin", label: "Admin", color: "bg-red-100 text-red-800" },
-  { value: "Editor", label: "Editor", color: "bg-orange-100 text-orange-800" },
-  { value: "Viewer", label: "Viewer", color: "bg-blue-100 text-blue-800" },
-];
-
 export function RoleFilterCombobox({
   selectedRoles,
   onRoleChange,
   roleCounts,
+  roles,
 }) {
   const [open, setOpen] = useState(false);
 
@@ -36,8 +31,21 @@ export function RoleFilterCombobox({
     const newSelectedRoles = selectedRoles.includes(roleValue)
       ? selectedRoles.filter((role) => role !== roleValue)
       : [...selectedRoles, roleValue];
-
     onRoleChange(newSelectedRoles);
+  };
+
+  // Get role color dot
+  const getRoleDotColor = (roleName) => {
+    const colors = [
+      "bg-red-500",
+      "bg-orange-500",
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-pink-500",
+    ];
+    const index = roles.findIndex((role) => role.name === roleName);
+    return colors[index % colors.length] || "bg-gray-500";
   };
 
   return (
@@ -47,7 +55,7 @@ export function RoleFilterCombobox({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between border-gray-200"
+          className="w-[200px] justify-between border-gray-200 bg-transparent"
         >
           <div className="flex items-center">
             <Filter className="mr-2 h-4 w-4" />
@@ -68,25 +76,29 @@ export function RoleFilterCombobox({
             <CommandGroup>
               {roles.map((role) => (
                 <CommandItem
-                  key={role.value}
-                  onSelect={() => handleRoleToggle(role.value)}
+                  key={role.tent_config_uuid}
+                  onSelect={() => handleRoleToggle(role.name)}
                   className="cursor-pointer"
                 >
                   <Check
                     className={cn(
                       "mr-2 h-4 w-4",
-                      selectedRoles.includes(role.value)
+                      selectedRoles.includes(role.name)
                         ? "opacity-100"
                         : "opacity-0"
                     )}
                   />
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center">
-                      <div className="w-2 h-2 rounded-full mr-2 bg-primary"></div>
-                      {role.label}
+                      <div
+                        className={`w-2 h-2 rounded-full mr-2 ${getRoleDotColor(
+                          role.name
+                        )}`}
+                      ></div>
+                      {role.name}
                     </div>
                     <Badge variant="secondary" className="ml-2">
-                      {roleCounts[role.value] || 0}
+                      {roleCounts[role.name] || 0}
                     </Badge>
                   </div>
                 </CommandItem>

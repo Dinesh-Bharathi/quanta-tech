@@ -4,90 +4,15 @@ import { useState, useEffect } from "react";
 import { UsersTable } from "@/components/users/users-table";
 import { AddUserDialog } from "@/components/users/add-user-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Users, UserCheck, Shield, Eye } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import axiosInstance from "@/services/network";
 import { useAuth } from "@/context/AuthContext";
 import { decryption } from "@/lib/encryption";
 import _ from "lodash";
-import { set } from "date-fns";
 import { toast } from "sonner";
-
-// Mock API functions
-// const fetchUsers = async () => {
-//   // Simulate API delay
-//   await new Promise((resolve) => setTimeout(resolve, 1500));
-
-//   return [
-//     {
-//       id: "1",
-//       name: "John Doe",
-//       email: "john.doe@example.com",
-//       contactNumber: "+1 (555) 123-4567",
-//       role: "Admin",
-//       avatar: "",
-//       createdAt: "2024-01-15",
-//       lastLogin: "2024-01-20",
-//     },
-//     {
-//       id: "2",
-//       name: "Jane Smith",
-//       email: "jane.smith@example.com",
-//       contactNumber: "+1 (555) 234-5678",
-//       role: "Editor",
-//       avatar: "",
-//       createdAt: "2024-01-10",
-//       lastLogin: "2024-01-19",
-//     },
-//     {
-//       id: "3",
-//       name: "Mike Johnson",
-//       email: "mike.johnson@example.com",
-//       contactNumber: "+1 (555) 345-6789",
-//       role: "Viewer",
-//       avatar: "",
-//       createdAt: "2024-01-05",
-//       lastLogin: "2024-01-18",
-//     },
-//     {
-//       id: "4",
-//       name: "Sarah Wilson",
-//       email: "sarah.wilson@example.com",
-//       contactNumber: "+1 (555) 456-7890",
-//       role: "Editor",
-//       avatar: "",
-//       createdAt: "2024-01-12",
-//       lastLogin: "2024-01-20",
-//     },
-//     {
-//       id: "5",
-//       name: "David Brown",
-//       email: "david.brown@example.com",
-//       contactNumber: "+1 (555) 567-8901",
-//       role: "Admin",
-//       avatar: "",
-//       createdAt: "2024-01-08",
-//       lastLogin: "2024-01-19",
-//     },
-//     {
-//       id: "6",
-//       name: "Lisa Davis",
-//       email: "lisa.davis@example.com",
-//       contactNumber: "+1 (555) 678-9012",
-//       role: "Viewer",
-//       avatar: "",
-//       createdAt: "2024-01-14",
-//       lastLogin: "2024-01-20",
-//     },
-//   ];
-// };
+import { rolesApi } from "@/services/settings/config/roles/api";
 
 const fetchUsers = async (tent_uuid) => {
   try {
@@ -109,7 +34,7 @@ const addUser = async (userData, tent_uuid) => {
     name: userData?.name,
     email: userData?.email,
     password: userData?.password,
-    role: _.lowerCase(userData?.role),
+    role: userData?.role,
     contactNumber: userData?.contactNumber,
   };
 
@@ -118,7 +43,6 @@ const addUser = async (userData, tent_uuid) => {
       `/api/account/users/${tent_uuid}`,
       body
     );
-
     if (res.status === 201) {
       toast.success("User created successfully!", { id: toastId });
       const newUser = decryption(res.data.data);
@@ -142,7 +66,7 @@ const updateUser = async (userData) => {
   const body = {
     name: userData?.name,
     email: userData?.email,
-    role: _.lowerCase(userData?.role),
+    role: userData?.role,
     contactNumber: userData?.contactNumber,
   };
 
@@ -151,7 +75,6 @@ const updateUser = async (userData) => {
       `/api/account/users/${userData?.user_uuid}`,
       body
     );
-
     toast.success("User updated successfully!", { id: toastId });
     const updated = decryption(res.data.data);
     return updated;
@@ -166,11 +89,9 @@ const updateUser = async (userData) => {
 };
 
 const deleteUser = async (userId) => {
-  const toastId = toast.loading("Deleteing user...");
-
+  const toastId = toast.loading("Deleting user...");
   try {
     await axiosInstance.delete(`/api/account/users/${userId}`);
-
     toast.success("User deleted successfully!", { id: toastId });
     return { success: true };
   } catch (error) {
@@ -188,6 +109,24 @@ export default function UsersPage() {
   const { tentDetails } = useAuth();
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [roles, setRoles] = useState([]);
+
+  const loadRoles = async () => {
+    try {
+      const response = await rolesApi.getRoles(tentDetails?.tent_uuid, {
+        status: "active",
+      });
+      setRoles(response.data);
+    } catch (error) {
+      console.error("Failed to load roles:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (tentDetails?.tent_uuid) {
+      loadRoles();
+    }
+  }, [tentDetails?.tent_uuid]);
 
   useEffect(() => {
     if (tentDetails?.tent_uuid) {
@@ -210,9 +149,7 @@ export default function UsersPage() {
   const handleAddUser = async (newUserData) => {
     try {
       const newUser = await addUser(newUserData, tentDetails?.tent_uuid);
-
       if (!newUser) return { success: false };
-
       setUsers((prevUsers) => [...prevUsers, newUser?.user]);
       setIsAddDialogOpen(false);
       return { success: true };
@@ -262,6 +199,23 @@ export default function UsersPage() {
 
   const roleCounts = getRoleCounts();
 
+  // Get role colors dynamically
+  const getRoleColor = (roleName) => {
+    const colors = [
+      "bg-red-100 text-red-800 border-red-200",
+      "bg-orange-100 text-orange-800 border-orange-200",
+      "bg-blue-100 text-blue-800 border-blue-200",
+      "bg-green-100 text-green-800 border-green-200",
+      "bg-purple-100 text-purple-800 border-purple-200",
+      "bg-pink-100 text-pink-800 border-pink-200",
+    ];
+    const index = roles.findIndex((role) => role.name === roleName);
+    return (
+      colors[index % colors.length] ||
+      "bg-gray-100 text-gray-800 border-gray-200"
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex-1 space-y-4">
@@ -272,7 +226,6 @@ export default function UsersPage() {
           </div>
           <Skeleton className="h-10 w-24" />
         </div>
-
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
@@ -287,7 +240,6 @@ export default function UsersPage() {
             </Card>
           ))}
         </div>
-
         <Card>
           <CardHeader>
             <Skeleton className="h-6 w-32" />
@@ -340,53 +292,44 @@ export default function UsersPage() {
             <p className="text-xs text-muted-foreground">+2 from last month</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Admins</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{roleCounts.Admin || 0}</div>
-            <p className="text-xs text-muted-foreground">Full access users</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Editors</CardTitle>
-            <UserCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{roleCounts.Editor || 0}</div>
-            <p className="text-xs text-muted-foreground">Content managers</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Viewers</CardTitle>
-            <Eye className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{roleCounts.Viewer || 0}</div>
-            <p className="text-xs text-muted-foreground">Read-only access</p>
-          </CardContent>
-        </Card>
+
+        {/* Dynamic role cards */}
+        {/* {roles.slice(0, 3).map((role, index) => { */}
+        {roles.map((role, index) => {
+          const icons = [Shield, UserCheck, Eye];
+          const Icon = icons[index] || Shield;
+
+          return (
+            <Card key={role.tent_config_uuid}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {role.name}s
+                </CardTitle>
+                <Icon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {roleCounts[role.name] || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {role.description}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="text-xl">Users Directory</CardTitle>
-          <CardDescription>
-            Comprehensive list of all users with advanced filtering and
-            management options
-          </CardDescription>
-        </CardHeader>
         <CardContent className="p-6">
           <UsersTable
             data={users}
+            roles={roles}
             onUpdateUser={handleUpdateUser}
             onDeleteUser={handleDeleteUser}
             onRoleChange={handleRoleChange}
             roleCounts={roleCounts}
+            getRoleColor={getRoleColor}
           />
         </CardContent>
       </Card>
@@ -395,6 +338,7 @@ export default function UsersPage() {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAddUser={handleAddUser}
+        roles={roles}
       />
     </div>
   );

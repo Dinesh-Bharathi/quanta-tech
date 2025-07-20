@@ -1,4 +1,4 @@
-import { SettingsTabs } from "@/components/settings/settings-tabs"
+import { SettingsTabs } from "@/components/settings";
 
 export default function SettingsPage() {
   return (
@@ -9,5 +9,5 @@ export default function SettingsPage() {
 
       <SettingsTabs />
     </div>
-  )
+  );
 }

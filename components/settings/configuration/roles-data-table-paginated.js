@@ -1,7 +1,6 @@
 "use client";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -14,11 +13,9 @@ import {
   ArrowUpDown,
   ChevronDown,
   MoreHorizontal,
-  Search,
   Edit,
   Trash2,
   Copy,
-  Phone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,7 +26,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -39,8 +35,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { EditUserDialog } from "@/components/users/edit-user-dialog";
-import { DeleteUserDialog } from "@/components/users/delete-user-dialog";
 import {
   Select,
   SelectContent,
@@ -48,66 +42,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RoleFilterCombobox } from "@/components/users/role-filter-combobox";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 
-export function UsersTable({
-  data,
-  roles,
-  onUpdateUser,
-  onDeleteUser,
-  onRoleChange,
-  roleCounts,
-  getRoleColor,
-}) {
+export function RolesDataTablePaginated({ roles, loading, onEdit, onDelete }) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
-  const [editingUser, setEditingUser] = useState(null);
-  const [deletingUser, setDeletingUser] = useState(null);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [roleToDelete, setRoleToDelete] = useState(null);
 
-  // Global filter function for name, email, and contact number
-  const globalFilterFn = (row, columnId, value) => {
-    const user = row.original;
-    const searchValue = value.toLowerCase();
-    return (
-      user.name.toLowerCase().includes(searchValue) ||
-      user.email.toLowerCase().includes(searchValue) ||
-      user.contactNumber.toLowerCase().includes(searchValue)
-    );
+  const handleDeleteClick = (role) => {
+    setRoleToDelete(role);
+    setDeleteDialogOpen(true);
   };
 
-  // Filter data based on selected roles
-  const filteredData = useMemo(() => {
-    if (selectedRoles.length === 0) return data;
-    return data.filter((user) => selectedRoles.includes(user.role));
-  }, [data, selectedRoles]);
-
-  const getInitials = (name) => {
-    return name
-      ? name
-          .split(" ")
-          .map((n) => n[0])
-          .join("")
-          .toUpperCase()
-      : "??";
-  };
-
-  // Get role color dot
-  const getRoleDotColor = (roleName) => {
-    const colors = [
-      "bg-red-500",
-      "bg-orange-500",
-      "bg-blue-500",
-      "bg-green-500",
-      "bg-purple-500",
-      "bg-pink-500",
-    ];
-    const index = roles.findIndex((role) => role.name === roleName);
-    return colors[index % colors.length] || "bg-gray-500";
+  const handleDeleteConfirm = async () => {
+    if (roleToDelete) {
+      await onDelete(roleToDelete.id);
+      setDeleteDialogOpen(false);
+      setRoleToDelete(null);
+    }
   };
 
   const columns = [
@@ -119,89 +85,64 @@ export function UsersTable({
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Name
+            Role Name
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
       cell: ({ row }) => {
-        const user = row.original;
+        const role = row.original;
         return (
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <Avatar>
-                <AvatarImage
-                  src={user?.avatar || "/placeholder.svg"}
-                  alt="User"
-                />
-                <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
-              </Avatar>
-            </div>
-            <div>
-              <div className="font-medium">{user.name}</div>
-              <div className="text-sm">{user.email}</div>
+          <div>
+            <div className="font-medium">{role.name}</div>
+            <div className="text-sm text-muted-foreground">
+              {role.description}
             </div>
           </div>
         );
       },
     },
     {
-      accessorKey: "contactNumber",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            <Phone className="mr-2 h-4 w-4" />
-            Contact
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        );
-      },
+      accessorKey: "permissions",
+      header: "Permissions",
       cell: ({ row }) => {
-        const contactNumber = row.getValue("contactNumber");
-        return <div className="font-mono text-sm">{contactNumber}</div>;
+        const permissions = row.getValue("permissions");
+        return (
+          <div className="flex flex-wrap gap-1">
+            {permissions.slice(0, 4).map((permission) => (
+              <Badge key={permission} variant="secondary" className="text-xs">
+                {permission.replace("_", " ").charAt(0).toUpperCase() +
+                  permission.slice(1)}
+              </Badge>
+            ))}
+            {permissions.length > 4 && (
+              <Badge variant="outline" className="text-xs">
+                +{permissions.length - 4} more
+              </Badge>
+            )}
+          </div>
+        );
       },
     },
     {
-      accessorKey: "role",
+      accessorKey: "status",
       header: ({ column }) => {
         return (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
           >
-            Role
+            Status
             <ArrowUpDown className="ml-2 h-4 w-4" />
           </Button>
         );
       },
       cell: ({ row }) => {
-        const user = row.original;
+        const status = row.getValue("status");
         return (
-          <Select
-            value={user.role}
-            onValueChange={(newRole) => onRoleChange(user.id, newRole)}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {roles.map((role) => (
-                <SelectItem key={role.tent_config_uuid} value={role.name}>
-                  <div className="flex items-center">
-                    <div
-                      className={`w-2 h-2 rounded-full mr-2 ${getRoleDotColor(
-                        role.name
-                      )}`}
-                    ></div>
-                    {role.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Badge variant={status === "active" ? "default" : "secondary"}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Badge>
         );
       },
     },
@@ -224,14 +165,10 @@ export function UsersTable({
       },
     },
     {
-      accessorKey: "lastLogin",
-      header: "Last Login",
+      accessorKey: "updatedAt",
+      header: "Last Updated",
       cell: ({ row }) => {
-        const lastLogin = row.getValue("lastLogin");
-        if (lastLogin === "Never") {
-          return <Badge variant="secondary">Never</Badge>;
-        }
-        const date = new Date(lastLogin);
+        const date = new Date(row.getValue("updatedAt"));
         return <div className="text-sm">{date.toLocaleDateString()}</div>;
       },
     },
@@ -239,7 +176,7 @@ export function UsersTable({
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        const user = row.original;
+        const role = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -251,35 +188,26 @@ export function UsersTable({
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(user.email)}
+                onClick={() => navigator.clipboard.writeText(role.name)}
                 className="cursor-pointer"
               >
                 <Copy className="mr-2 h-4 w-4" />
-                Copy email
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() =>
-                  navigator.clipboard.writeText(user.contactNumber)
-                }
-                className="cursor-pointer"
-              >
-                <Phone className="mr-2 h-4 w-4" />
-                Copy contact
+                Copy role name
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
-                onClick={() => setEditingUser(user)}
+                onClick={() => onEdit(role)}
                 className="cursor-pointer"
               >
                 <Edit className="mr-2 h-4 w-4" />
-                Edit user
+                Edit role
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => setDeletingUser(user)}
+                onClick={() => handleDeleteClick(role)}
                 className="text-red-600 cursor-pointer focus:text-red-600"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete user
+                Delete role
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -289,7 +217,7 @@ export function UsersTable({
   ];
 
   const table = useReactTable({
-    data: filteredData,
+    data: roles,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -299,36 +227,31 @@ export function UsersTable({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    globalFilterFn,
-    onGlobalFilterChange: setGlobalFilter,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
-      globalFilter,
     },
   });
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="flex items-center space-x-4">
+            <Skeleton key={i} className="h-12 w-full" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between space-x-4">
-        <div className="flex items-center space-x-2 flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search users by name, email, or contact..."
-              value={globalFilter}
-              onChange={(event) => setGlobalFilter(event.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <RoleFilterCombobox
-            selectedRoles={selectedRoles}
-            onRoleChange={setSelectedRoles}
-            roleCounts={roleCounts}
-            roles={roles}
-          />
+        <div className="flex-1 text-sm text-muted-foreground">
+          {/* {table.getFilteredRowModel().rows.length} role(s) total. */}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -487,24 +410,27 @@ export function UsersTable({
         </div>
       </div>
 
-      {editingUser && (
-        <EditUserDialog
-          user={editingUser}
-          open={!!editingUser}
-          onOpenChange={() => setEditingUser(null)}
-          onUpdateUser={onUpdateUser}
-          roles={roles}
-        />
-      )}
-
-      {deletingUser && (
-        <DeleteUserDialog
-          user={deletingUser}
-          open={!!deletingUser}
-          onOpenChange={() => setDeletingUser(null)}
-          onDeleteUser={onDeleteUser}
-        />
-      )}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              role &quot;{roleToDelete?.name}&quot; and remove all associated
+              permissions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

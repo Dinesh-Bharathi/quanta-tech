@@ -36,7 +36,7 @@ export async function GET(req, { params }) {
       user_uuid: user.user_uuid,
       name: user.name,
       email: user.email || "",
-      role: _.capitalize(user.role) || "",
+      role: user.role || "",
       contactNumber: user.phone_number || "",
       avatar: user.profile_img || "",
       createdAt: new Date(user.created_at).toISOString().split("T")[0] || "",

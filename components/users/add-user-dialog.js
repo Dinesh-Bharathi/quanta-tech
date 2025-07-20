@@ -40,50 +40,68 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-const formSchema = z
-  .object({
-    name: z
-      .string()
-      .min(2, "Name must be at least 2 characters")
-      .max(50, "Name must be less than 50 characters"),
-    email: z.string().email("Please enter a valid email address"),
-    contactNumber: z
-      .string()
-      .min(10, "Contact number must be at least 10 characters")
-      .regex(/^[+]?[0-9\s\-$$$$]+$/, "Please enter a valid contact number"),
-    role: z.enum(["Admin", "Editor", "Viewer"], {
-      required_error: "Please select a role",
-    }),
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
-      ),
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
-  });
-
-export function AddUserDialog({ open, onOpenChange, onAddUser }) {
+export function AddUserDialog({ open, onOpenChange, onAddUser, roles }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Create dynamic schema based on available roles
+  const createFormSchema = () => {
+    const roleNames = roles.map((role) => role.name);
+    return z
+      .object({
+        name: z
+          .string()
+          .min(2, "Name must be at least 2 characters")
+          .max(50, "Name must be less than 50 characters"),
+        email: z.string().email("Please enter a valid email address"),
+        contactNumber: z
+          .string()
+          .min(10, "Contact number must be at least 10 characters")
+          .regex(/^[+]?[0-9\s\-()]+$/, "Please enter a valid contact number"),
+        role: z.enum(roleNames.length > 0 ? roleNames : ["Viewer"], {
+          required_error: "Please select a role",
+        }),
+        password: z
+          .string()
+          .min(8, "Password must be at least 8 characters")
+          .regex(
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+            "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+          ),
+        confirmPassword: z.string(),
+      })
+      .refine((data) => data.password === data.confirmPassword, {
+        message: "Passwords don't match",
+        path: ["confirmPassword"],
+      });
+  };
+
   const form = useForm({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema()),
     defaultValues: {
       name: "",
       email: "",
       contactNumber: "",
-      role: "Viewer",
+      role: roles.length > 0 ? roles[0].name : "Viewer",
       password: "",
       confirmPassword: "",
     },
   });
+
+  // Get role color dot
+  const getRoleDotColor = (roleName) => {
+    const colors = [
+      "bg-red-500",
+      "bg-orange-500",
+      "bg-blue-500",
+      "bg-green-500",
+      "bg-purple-500",
+      "bg-pink-500",
+    ];
+    const index = roles.findIndex((role) => role.name === roleName);
+    return colors[index % colors.length] || "bg-gray-500";
+  };
 
   const onSubmit = async (data) => {
     setIsLoading(true);
@@ -115,7 +133,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
             permissions.
           </DialogDescription>
         </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -135,7 +152,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="role"
@@ -155,24 +171,21 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Admin">
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 rounded-full bg-red-500 mr-2"></div>
-                            Admin
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Editor">
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 rounded-full bg-orange-500 mr-2"></div>
-                            Editor
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="Viewer">
-                          <div className="flex items-center">
-                            <div className="w-2 h-2 rounded-full bg-blue-500 mr-2"></div>
-                            Viewer
-                          </div>
-                        </SelectItem>
+                        {roles.map((role) => (
+                          <SelectItem
+                            key={role.tent_config_uuid}
+                            value={role.name}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`w-2 h-2 rounded-full mr-2 ${getRoleDotColor(
+                                  role.name
+                                )}`}
+                              ></div>
+                              {role.name}
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -180,7 +193,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                 )}
               />
             </div>
-
             <FormField
               control={form.control}
               name="email"
@@ -201,7 +213,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="contactNumber"
@@ -218,7 +229,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                 </FormItem>
               )}
             />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -255,7 +265,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="confirmPassword"
@@ -294,7 +303,6 @@ export function AddUserDialog({ open, onOpenChange, onAddUser }) {
                 )}
               />
             </div>
-
             <DialogFooter className="gap-2 pt-4">
               <Button
                 type="button"

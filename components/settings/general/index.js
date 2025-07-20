@@ -364,7 +364,7 @@ export function GeneralSettings() {
         <CardHeader>
           <CardTitle>Organization Information</CardTitle>
           <CardDescription>
-            Update your organization's basic information
+            Update your organization&apos;s basic information
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -452,7 +452,9 @@ export function GeneralSettings() {
       <Card>
         <CardHeader>
           <CardTitle>Address Information</CardTitle>
-          <CardDescription>Your organization's primary address</CardDescription>
+          <CardDescription>
+            Your organization&apos;s primary address
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -535,7 +537,7 @@ export function GeneralSettings() {
         <CardHeader>
           <CardTitle>Social Media Links</CardTitle>
           <CardDescription>
-            Add your organization's social media presence (optional)
+            Add your organization&apos;s social media presence (optional)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
