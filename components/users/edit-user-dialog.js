@@ -56,6 +56,7 @@ export function EditUserDialog({
       role: z.enum(roleNames.length > 0 ? roleNames : ["Viewer"], {
         required_error: "Please select a role",
       }),
+      roleUuid: z.string(),
     });
   };
 
@@ -66,6 +67,7 @@ export function EditUserDialog({
       email: "",
       contactNumber: "",
       role: roles.length > 0 ? roles[0].name : "Viewer",
+      roleUuid: roles.length > 0 ? roles[0].tent_config_uuid : "", // Set default roleUuid
     },
   });
 
@@ -76,9 +78,10 @@ export function EditUserDialog({
         email: user.email,
         contactNumber: user.contactNumber,
         role: user.role,
+        roleUuid: user.roleUuid,
       });
     }
-  }, [user, form]);
+  }, [user, form, roles]);
 
   // Get role color dot
   const getRoleDotColor = (roleName) => {
@@ -92,6 +95,13 @@ export function EditUserDialog({
     ];
     const index = roles.findIndex((role) => role.name === roleName);
     return colors[index % colors.length] || "bg-gray-500";
+  };
+
+  // Handle role change to update both role name and roleUuid
+  const handleRoleChange = (selectedRoleName) => {
+    const selectedRole = roles.find((role) => role.name === selectedRoleName);
+    form.setValue("role", selectedRoleName);
+    form.setValue("roleUuid", selectedRole?.tent_config_uuid || "");
   };
 
   const onSubmit = async (data) => {
@@ -154,7 +164,10 @@ export function EditUserDialog({
                       <Shield className="h-4 w-4" />
                       Role
                     </FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
+                    <Select
+                      onValueChange={handleRoleChange}
+                      value={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue />
@@ -183,6 +196,7 @@ export function EditUserDialog({
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
               name="email"

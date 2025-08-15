@@ -5,10 +5,13 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useThemeCustomization } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
+import { useRouteGuard } from "@/hooks/useRouteGuard";
 
 export default function DashboardLayout({ children }) {
   const { tentDetails, user } = useAuth();
   const { layoutConfig } = useThemeCustomization();
+
+  useRouteGuard();
 
   // Don't render sidebar if position is "none"
   if (layoutConfig.sidebarPosition === "none") {

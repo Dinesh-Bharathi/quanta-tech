@@ -4,19 +4,14 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Building2,
-  LayoutDashboard,
-  Package,
-  CreditCard,
-  Settings,
-  Users,
-  BarChart3,
-  Shield,
   ChevronDown,
-  LogOut,
-  MoreHorizontal,
+  Building2,
   LifeBuoy,
+  LogOut,
   Send,
+  Shield,
+  Settings,
+  MoreHorizontal,
   Palette,
 } from "lucide-react";
 
@@ -29,12 +24,12 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuAction,
-  SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarMenuButton,
+  SidebarMenuSubButton,
+  SidebarMenuAction,
   SidebarRail,
 } from "@/components/ui/sidebar";
 
@@ -55,63 +50,12 @@ import {
 } from "@/components/ui/tooltip";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { useThemeCustomization } from "../theme-provider";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 
-const navigation = [
-  {
-    title: "Overview",
-    items: [
-      {
-        title: "Dashboard",
-        url: "/dashboard",
-        icon: LayoutDashboard,
-      },
-    ],
-  },
-  {
-    title: "Management",
-    items: [
-      {
-        title: "Inventory",
-        url: "/inventory",
-        icon: Package,
-        subItems: [
-          { title: "Products", url: "/inventory/products" },
-          { title: "Categories", url: "/inventory/categories" },
-          { title: "Warehouses", url: "/inventory/warehouses" },
-          { title: "Stock Movements", url: "/inventory/movements" },
-        ],
-      },
-      {
-        title: "Team",
-        url: "/team",
-        icon: Users,
-        subItems: [
-          { title: "Members", url: "/team/members" },
-          { title: "Roles", url: "/team/roles" },
-          { title: "Invitations", url: "/team/invitations" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      {
-        title: "Staffs",
-        url: "/users",
-        icon: Users,
-      },
-      {
-        title: "Billing",
-        url: "/billing",
-        icon: CreditCard,
-      },
-    ],
-  },
-];
+import { mainNavigation, footerNavigation } from "@/lib/navigation";
 
 export function DashboardSidebar({
   tentDetails,
@@ -124,6 +68,8 @@ export function DashboardSidebar({
   const { logout } = useAuth();
   const { layoutConfig } = useThemeCustomization();
   const [expandedItems, setExpandedItems] = useState(new Set());
+
+  const hasAccess = (url, section) => user?.allowedModule?.[section]?.[url];
 
   const toggleExpanded = (title) => {
     const newExpanded = new Set(expandedItems);
@@ -141,17 +87,16 @@ export function DashboardSidebar({
       : "??";
   };
 
-  // Determine sidebar variant based on layout config
   const getSidebarVariant = () => {
     if (isOffcanvas || isCollapseOffcanvas) return "floating";
     if (isStatic) return "sidebar";
-    return "inset"; // Default for collapsible
+    return "inset";
   };
 
   const getSidebarCollapsible = () => {
     if (isOffcanvas && !isCollapseOffcanvas) return "offcanvas";
     if (isStatic && isCollapseOffcanvas) return "none";
-    return "icon"; // Default for collapsible
+    return "icon";
   };
 
   return (
@@ -161,18 +106,17 @@ export function DashboardSidebar({
         collapsible={getSidebarCollapsible()}
         side={layoutConfig.sidebarPosition}
         className={cn(
-          // Custom styling based on layout config
           isOffcanvas && "z-50",
-          // Fixed styling for static sidebar
           isStatic && [
-            "h-screen", // Full screen height
-            "sticky", // Make it sticky
-            "top-0", // Stick to top
-            "overflow-y-auto", // Allow internal scrolling
-            "flex-shrink-0", // Prevent shrinking
+            "h-screen",
+            "sticky",
+            "top-0",
+            "overflow-y-auto",
+            "flex-shrink-0",
           ]
         )}
       >
+        {/* Header */}
         <SidebarHeader>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -196,33 +140,95 @@ export function DashboardSidebar({
           </SidebarMenu>
         </SidebarHeader>
 
+        {/* Main Navigation */}
         <SidebarContent className={cn(isStatic && "flex-1 overflow-y-auto")}>
-          {navigation.map((section) => (
-            <SidebarGroup key={section.title}>
-              <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {section.items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      {item.subItems ? (
-                        <>
+          {mainNavigation.map((section) => {
+            const filteredItems = section.items
+              .map((item) => {
+                if (item.subItems) {
+                  const filteredSub = item.subItems.filter((sub) =>
+                    hasAccess(sub.url, "mainNavigation")
+                  );
+                  if (
+                    hasAccess(item.url, "mainNavigation") ||
+                    filteredSub.length > 0
+                  ) {
+                    return { ...item, subItems: filteredSub };
+                  }
+                  return null;
+                }
+                return hasAccess(item.url, "mainNavigation") ? item : null;
+              })
+              .filter(Boolean);
+
+            if (filteredItems.length === 0) return null;
+
+            return (
+              <SidebarGroup key={section.title}>
+                <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {filteredItems.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        {item.subItems ? (
+                          <>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <SidebarMenuButton
+                                  onClick={() => toggleExpanded(item.title)}
+                                  className="w-full justify-between"
+                                >
+                                  <div className="flex items-center">
+                                    <item.icon className="mr-2 h-4 w-4" />
+                                    <span>{item.title}</span>
+                                  </div>
+                                  <ChevronDown
+                                    className={`h-4 w-4 transition-transform ${
+                                      expandedItems.has(item.title)
+                                        ? "rotate-180"
+                                        : ""
+                                    }`}
+                                  />
+                                </SidebarMenuButton>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side={
+                                  layoutConfig.sidebarPosition === "right"
+                                    ? "left"
+                                    : "right"
+                                }
+                              >
+                                <p>{item.title}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            {expandedItems.has(item.title) && (
+                              <SidebarMenuSub>
+                                {item.subItems.map((subItem) => (
+                                  <SidebarMenuSubItem key={subItem.title}>
+                                    <SidebarMenuSubButton
+                                      asChild
+                                      isActive={pathname === subItem.url}
+                                    >
+                                      <Link href={subItem.url}>
+                                        {subItem.title}
+                                      </Link>
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            )}
+                          </>
+                        ) : (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <SidebarMenuButton
-                                onClick={() => toggleExpanded(item.title)}
-                                className="w-full justify-between"
+                                asChild
+                                isActive={pathname === item.url}
                               >
-                                <div className="flex items-center">
+                                <Link href={item.url}>
                                   <item.icon className="mr-2 h-4 w-4" />
                                   <span>{item.title}</span>
-                                </div>
-                                <ChevronDown
-                                  className={`h-4 w-4 transition-transform ${
-                                    expandedItems.has(item.title)
-                                      ? "rotate-180"
-                                      : ""
-                                  }`}
-                                />
+                                </Link>
                               </SidebarMenuButton>
                             </TooltipTrigger>
                             <TooltipContent
@@ -235,117 +241,87 @@ export function DashboardSidebar({
                               <p>{item.title}</p>
                             </TooltipContent>
                           </Tooltip>
-                          {expandedItems.has(item.title) && (
-                            <SidebarMenuSub>
-                              {item.subItems.map((subItem) => (
-                                <SidebarMenuSubItem key={subItem.title}>
-                                  <SidebarMenuSubButton
-                                    asChild
-                                    isActive={pathname === subItem.url}
-                                  >
-                                    <Link href={subItem.url}>
-                                      {subItem.title}
-                                    </Link>
-                                  </SidebarMenuSubButton>
-                                </SidebarMenuSubItem>
-                              ))}
-                            </SidebarMenuSub>
-                          )}
-                        </>
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <SidebarMenuButton
-                              asChild
-                              isActive={pathname === item.url}
-                            >
-                              <Link href={item.url}>
-                                <item.icon className="mr-2 h-4 w-4" />
-                                <span>{item.title}</span>
-                              </Link>
-                            </SidebarMenuButton>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side={
-                              layoutConfig.sidebarPosition === "right"
-                                ? "left"
-                                : "right"
-                            }
-                          >
-                            <p>{item.title}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
+                        )}
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            );
+          })}
         </SidebarContent>
 
+        {/* Footer Navigation + User Dropdown */}
         <SidebarFooter>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === "/settings"}
-                    className="mb-1"
-                  >
-                    <Link href="/settings">
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Settings</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </TooltipTrigger>
-                <TooltipContent
-                  side={
-                    layoutConfig.sidebarPosition === "right" ? "left" : "right"
-                  }
-                >
-                  <p>Settings</p>
-                </TooltipContent>
-              </Tooltip>
-              <DropdownMenu side="right" align="start">
-                <DropdownMenuTrigger asChild>
-                  <SidebarMenuAction>
-                    <MoreHorizontal />
-                  </SidebarMenuAction>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent side="right" align="start">
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/settings?tab=general"
-                      className="flex items-center gap-2"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>General</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/settings?tab=security"
-                      className="flex items-center gap-2"
-                    >
-                      <Shield className="w-4 h-4" />
-                      <span>Security</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link
-                      href="/settings?tab=theme"
-                      className="flex items-center gap-2"
-                    >
-                      <Palette className="w-4 h-4" />
-                      <span>Theme</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </SidebarMenuItem>
+            {footerNavigation.map((item) => {
+              const permittedSubItems = item.subItems?.filter((subItem) =>
+                hasAccess(subItem.url, "footerNavigation")
+              );
 
+              const isMainItemAllowed =
+                hasAccess(item.url, "footerNavigation") ||
+                permittedSubItems.length > 0;
+
+              if (!isMainItemAllowed) return null;
+
+              const targetUrl = hasAccess(item.url, "footerNavigation")
+                ? item.url
+                : permittedSubItems[0]?.url;
+
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={pathname.startsWith(item.url)}
+                        className="mb-1"
+                      >
+                        <Link href={targetUrl}>
+                          <item.icon className="mr-2 h-4 w-4" />
+                          <span>{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side={
+                        layoutConfig.sidebarPosition === "right"
+                          ? "left"
+                          : "right"
+                      }
+                    >
+                      <p>{item.title}</p>
+                    </TooltipContent>
+                  </Tooltip>
+
+                  {permittedSubItems.length > 0 && (
+                    <DropdownMenu side="right" align="start">
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuAction>
+                          <MoreHorizontal />
+                        </SidebarMenuAction>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent side="right" align="start">
+                        {permittedSubItems.map((subItem) => (
+                          <DropdownMenuItem asChild key={subItem.title}>
+                            <Link
+                              href={subItem.url}
+                              className="flex items-center gap-2"
+                            >
+                              <subItem.icon className="w-4 h-4" />
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </SidebarMenuItem>
+              );
+            })}
+
+            {/* Profile Dropdown */}
             <SidebarMenuItem>
               <DropdownMenu>
                 <Tooltip>
@@ -356,7 +332,10 @@ export function DashboardSidebar({
                         className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                       >
                         <Avatar className="h-8 w-8 rounded-lg">
-                          <AvatarImage src="/placeholder-user.jpg" alt="User" />
+                          <AvatarImage
+                            src={user?.profile || "/placeholder-user.jpg"}
+                            alt="User"
+                          />
                           <AvatarFallback className="rounded-lg">
                             {getInitials(user?.name)}
                           </AvatarFallback>
@@ -432,7 +411,7 @@ export function DashboardSidebar({
                     Security
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => logout()}>
+                  <DropdownMenuItem onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
@@ -441,6 +420,7 @@ export function DashboardSidebar({
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
+
         <SidebarRail />
       </Sidebar>
     </TooltipProvider>

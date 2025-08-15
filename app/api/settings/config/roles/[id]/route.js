@@ -62,6 +62,7 @@ export async function GET(req, { params }) {
       ({
         config_id,
         permissions,
+        role_modules,
         created_at,
         updated_at,
         status,
@@ -69,6 +70,7 @@ export async function GET(req, { params }) {
       }) => ({
         ...rest,
         permissions: parsePermissions(permissions),
+        modules: parsePermissions(role_modules),
         status: status ? "active" : "inactive",
         createdAt: created_at,
         updatedAt: updated_at,

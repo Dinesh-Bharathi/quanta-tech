@@ -35,6 +35,7 @@ const addUser = async (userData, tent_uuid) => {
     email: userData?.email,
     password: userData?.password,
     role: userData?.role,
+    roleUuid: userData?.roleUuid,
     contactNumber: userData?.contactNumber,
   };
 
@@ -67,6 +68,7 @@ const updateUser = async (userData) => {
     name: userData?.name,
     email: userData?.email,
     role: userData?.role,
+    roleUuid: userData?.roleUuid,
     contactNumber: userData?.contactNumber,
   };
 
@@ -182,10 +184,10 @@ export default function UsersPage() {
     }
   };
 
-  const handleRoleChange = async (userId, newRole) => {
+  const handleRoleChange = async (userId, newRole, roleUuid) => {
     const user = users.find((u) => u.id === userId);
     if (user) {
-      await handleUpdateUser({ ...user, role: newRole });
+      await handleUpdateUser({ ...user, role: newRole, roleUuid });
     }
   };
 

@@ -62,6 +62,7 @@ export function AddUserDialog({ open, onOpenChange, onAddUser, roles }) {
         role: z.enum(roleNames.length > 0 ? roleNames : ["Viewer"], {
           required_error: "Please select a role",
         }),
+        roleUuid: z.string(),
         password: z
           .string()
           .min(8, "Password must be at least 8 characters")
@@ -84,6 +85,7 @@ export function AddUserDialog({ open, onOpenChange, onAddUser, roles }) {
       email: "",
       contactNumber: "",
       role: roles.length > 0 ? roles[0].name : "Viewer",
+      roleUuid: roles.length > 0 ? roles[0].tent_config_uuid : "", // Set default roleUuid
       password: "",
       confirmPassword: "",
     },
@@ -101,6 +103,13 @@ export function AddUserDialog({ open, onOpenChange, onAddUser, roles }) {
     ];
     const index = roles.findIndex((role) => role.name === roleName);
     return colors[index % colors.length] || "bg-gray-500";
+  };
+
+  // Handle role change to update both role name and roleUuid
+  const handleRoleChange = (selectedRoleName) => {
+    const selectedRole = roles.find((role) => role.name === selectedRoleName);
+    form.setValue("role", selectedRoleName);
+    form.setValue("roleUuid", selectedRole?.tent_config_uuid || "");
   };
 
   const onSubmit = async (data) => {
@@ -162,7 +171,7 @@ export function AddUserDialog({ open, onOpenChange, onAddUser, roles }) {
                       Role
                     </FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={handleRoleChange} // Use custom handler
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -193,6 +202,7 @@ export function AddUserDialog({ open, onOpenChange, onAddUser, roles }) {
                 )}
               />
             </div>
+
             <FormField
               control={form.control}
               name="email"

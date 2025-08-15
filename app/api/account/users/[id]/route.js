@@ -90,13 +90,13 @@ export async function PUT(req, { params }) {
   const { id } = await params;
   const body = await req.json();
 
-  const { name, email, role, contactNumber } = body;
+  const { name, email, role, contactNumber, roleUuid } = body;
 
   try {
     await executeQuery({
       query:
-        "UPDATE tbl_tent_users SET name = ?, email = ?, role = ?,phone_number = ?  WHERE user_uuid = ?",
-      values: [name, email, role, contactNumber, id],
+        "UPDATE tbl_tent_users SET name = ?, email = ?, role = ?,phone_number = ?, tent_config_uuid = ?  WHERE user_uuid = ?",
+      values: [name, email, role, contactNumber, roleUuid, id],
     });
 
     const user = await executeQuery({
@@ -106,6 +106,7 @@ export async function PUT(req, { params }) {
       u.name, 
       u.email, 
       u.role, 
+      u.tent_config_uuid,
       u.phone_number, 
       u.profile_img,
       u.created_at,
@@ -128,7 +129,8 @@ export async function PUT(req, { params }) {
         user_uuid: user.user_uuid,
         name: user.name,
         email: user.email,
-        role: _.capitalize(user.role),
+        role: user.role,
+        roleUuid: user.roleUuid,
         contactNumber: user.phone_number,
         avatar: user.profile_img || "",
         createdAt: user.created_at

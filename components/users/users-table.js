@@ -179,17 +179,33 @@ export function UsersTable({
       },
       cell: ({ row }) => {
         const user = row.original;
+        const userRole = roles.find((role) => role.name === user.role);
+
         return (
           <Select
-            value={user.role}
-            onValueChange={(newRole) => onRoleChange(user.id, newRole)}
+            value={userRole?.tent_config_uuid}
+            onValueChange={(uuid) => {
+              const selectedRole = roles.find(
+                (role) => role.tent_config_uuid === uuid
+              );
+              if (selectedRole) {
+                onRoleChange(
+                  user.id,
+                  selectedRole.name,
+                  selectedRole.tent_config_uuid
+                );
+              }
+            }}
           >
             <SelectTrigger className="w-[140px]">
-              <SelectValue />
+              <SelectValue>{user.role}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {roles.map((role) => (
-                <SelectItem key={role.tent_config_uuid} value={role.name}>
+                <SelectItem
+                  key={role.tent_config_uuid}
+                  value={role.tent_config_uuid}
+                >
                   <div className="flex items-center">
                     <div
                       className={`w-2 h-2 rounded-full mr-2 ${getRoleDotColor(

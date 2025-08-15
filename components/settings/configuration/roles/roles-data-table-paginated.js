@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 import {
   flexRender,
@@ -16,6 +15,7 @@ import {
   Edit,
   Trash2,
   Copy,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -55,7 +55,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function RolesDataTablePaginated({ roles, loading, onEdit, onDelete }) {
+export function RolesDataTablePaginated({
+  roles,
+  loading,
+  onEdit,
+  onEditModules,
+  onDelete,
+}) {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
@@ -70,7 +76,7 @@ export function RolesDataTablePaginated({ roles, loading, onEdit, onDelete }) {
 
   const handleDeleteConfirm = async () => {
     if (roleToDelete) {
-      await onDelete(roleToDelete.id);
+      await onDelete(roleToDelete);
       setDeleteDialogOpen(false);
       setRoleToDelete(null);
     }
@@ -203,6 +209,13 @@ export function RolesDataTablePaginated({ roles, loading, onEdit, onDelete }) {
                 Edit role
               </DropdownMenuItem>
               <DropdownMenuItem
+                onClick={() => onEditModules(role)}
+                className="cursor-pointer"
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Edit modules
+              </DropdownMenuItem>
+              <DropdownMenuItem
                 onClick={() => handleDeleteClick(role)}
                 className="text-red-600 cursor-pointer focus:text-red-600"
               >
@@ -251,7 +264,7 @@ export function RolesDataTablePaginated({ roles, loading, onEdit, onDelete }) {
     <div className="w-full space-y-4">
       <div className="flex items-center justify-between space-x-4">
         <div className="flex-1 text-sm text-muted-foreground">
-          {/* {table.getFilteredRowModel().rows.length} role(s) total. */}
+          {/* Role count display */}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

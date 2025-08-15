@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       }
       return true;
     } catch (err) {
-      const currentPath = window.location.pathname; // Works on client side only
+      const currentPath = window.location.pathname;
       const redirectPath = searchParams.get("redirect") || "/dashboard";
       const target =
         err.response?.data?.redirect || `/login?redirect=${redirectPath}`;

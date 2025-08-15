@@ -78,4 +78,23 @@ export const rolesApi = {
       throw error;
     }
   },
+
+  /**
+   * Delete a role by tent_config_uuid
+   */
+  async updateRoleModule(config_uuid, moduleData) {
+    const toastId = toast.loading("Updating role modules...");
+    try {
+      const res = await axiosInstance.put(
+        `/api/settings/config/role-modules/${config_uuid}`,
+        moduleData
+      );
+
+      toast.success("Role updated successfully!", { id: toastId });
+      return res.data;
+    } catch (error) {
+      toast.error("Failed to update role", { id: toastId });
+      throw error;
+    }
+  },
 };
