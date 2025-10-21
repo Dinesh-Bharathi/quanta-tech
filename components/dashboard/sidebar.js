@@ -69,7 +69,8 @@ export function DashboardSidebar({
   const { layoutConfig } = useThemeCustomization();
   const [expandedItems, setExpandedItems] = useState(new Set());
 
-  const hasAccess = (url, section) => user?.allowedModule?.[section]?.[url];
+  // const hasAccess = (url, section) => user?.allowedModule?.[section]?.[url];
+  const hasAccess = (url, section) => true;
 
   const toggleExpanded = (title) => {
     const newExpanded = new Set(expandedItems);

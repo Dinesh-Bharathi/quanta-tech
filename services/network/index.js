@@ -2,35 +2,39 @@
 
 import axios from "axios";
 
-// Create an axios instance
-const axiosInstance = axios.create();
+// Create an axios instance with base URL from .env
+const axiosInstance = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL, // e.g., "http://localhost:8080/api"
+  withCredentials: true, // ensures cookies are sent automatically
+});
 
-// Add a request interceptor to set the Authorization header
+// Request Interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get the token from cookies
-    config.withCredentials = true;
+    // Optionally handle tokens or headers here
+    // Example: if you use Bearer tokens in localStorage or cookies
+    // const token = getCookie("token");
+    // if (token) {
+    //   config.headers.Authorization = `Bearer ${token}`;
+    // }
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle encrypted responses
+// Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
-    // if (error.response && error.response.status === 401) {
-    //   // Handle unauthorized access, e.g., redirect to login
+    // Handle unauthorized access
+    // if (error.response?.status === 401) {
     //   const redirectPath = window.location.pathname;
-    //   window.location.href = `/login?redirect=${encodeURIComponent(
-    //     redirectPath
-    //   )}`;
+    //   window.location.href = `/login?redirect=${encodeURIComponent(redirectPath)}`;
     // }
+
     return Promise.reject(error);
   }
 );

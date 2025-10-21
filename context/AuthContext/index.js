@@ -8,10 +8,10 @@ import {
   useState,
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import axiosInstance from "@/services/network";
-import { decryption } from "@/lib/encryption";
-import Loading from "@/app/loading";
 import { toast } from "sonner";
+
+import { loginUser, getSession, logoutUser } from "@/services/auth/api";
+import { decryption } from "@/lib/encryption"; // optional if your API encrypts
 
 const AuthContext = createContext();
 
@@ -28,108 +28,114 @@ export const AuthProvider = ({ children }) => {
   const [tentDetails, setTentDetails] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingOrg, setloadingOrg] = useState(true);
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const login = async (credentials) => {
-    const toastId = toast.loading("Logging in...");
-    const redirectPath = searchParams.get("redirect") || "/dashboard";
+  // ✅ LOGIN
+  const login = useCallback(
+    async (credentials) => {
+      const toastId = toast.loading("Logging in...");
+      setLoading(true);
 
-    try {
-      await axiosInstance.post("/api/auth/login", credentials);
-      await getSession();
-      toast.success("Login successful", { id: toastId });
-      router.push(redirectPath);
-      return true;
-    } catch (err) {
-      throw new Error(err.response?.data?.message || "Login failed");
-    }
-  };
+      try {
+        const response = await loginUser(credentials);
+        if (response.status === 200) {
+          await fetchSession(); // get user info post-login
+          toast.success("Login successful", { id: toastId });
 
-  const getSession = async () => {
+          const redirectPath = searchParams.get("redirect") || "/dashboard";
+          router.push(redirectPath);
+          return true;
+        }
+        toast.error("Login failed", { id: toastId });
+        return false;
+      } catch (err) {
+        console.error("Login error:", err);
+        toast.error(err.response?.data?.message || "Invalid credentials", {
+          id: toastId,
+        });
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router, searchParams]
+  );
+
+  // ✅ FETCH SESSION
+  const fetchSession = useCallback(async () => {
+    setLoading(true);
     try {
-      const response = await axiosInstance.get("/api/auth/session");
-      const successdata = decryption(response.data?.data);
-      if (successdata) {
-        setUser(successdata);
+      const response = await getSession();
+      const data = response.data?.data;
+      // const data = decryption(response.data?.data); // if needed
+
+      if (data) {
+        setUser(data.user || null);
+        setTentDetails(data.tent || null);
         setIsAuthenticated(true);
       } else {
         setUser(null);
+        setTentDetails(null);
         setIsAuthenticated(false);
       }
-      return true;
     } catch (err) {
-      const currentPath = window.location.pathname;
-      const redirectPath = searchParams.get("redirect") || "/dashboard";
-      const target =
-        err.response?.data?.redirect || `/login?redirect=${redirectPath}`;
-
+      console.error("Session fetch error:", err);
       setUser(null);
+      setTentDetails(null);
       setIsAuthenticated(false);
 
+      const currentPath = window.location.pathname;
       if (!PUBLIC_ROUTES.includes(currentPath)) {
-        router.replace(target);
+        const redirectPath = `/login?redirect=${currentPath}`;
+        router.replace(redirectPath);
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  useEffect(() => {
-    getSession();
-  }, []);
-
-  const getTentDetails = useCallback(async () => {
-    if (!user?.tentUuid) {
-      setloadingOrg(false);
-      return;
-    }
-
-    try {
-      const response = await axiosInstance.get(
-        `/api/account/tent-details/${user.tentUuid}`
-      );
-      const successdata = decryption(response.data?.data);
-      setTentDetails(successdata);
-    } catch (err) {
-      console.error("Failed to fetch tent details:", err);
-      setTentDetails(null);
-    } finally {
-      setloadingOrg(false);
-    }
-  }, [user?.tentUuid]);
-
-  useEffect(() => {
-    getTentDetails();
-  }, [getTentDetails]);
-
-  const logout = async () => {
+  // ✅ LOGOUT
+  const logout = useCallback(async () => {
     const toastId = toast.loading("Logging out...");
+    setLoading(true);
+
     try {
-      await axiosInstance.post("/api/auth/logout");
-      toast.success("Logout successful", { id: toastId });
+      await logoutUser();
       setUser(null);
+      setUser(setTentDetails);
       setIsAuthenticated(false);
+      toast.success("Logout successful", { id: toastId });
       router.push("/login");
     } catch (err) {
-      console.error("Logout failed:", err);
+      console.error("Logout error:", err);
+      toast.error("Logout failed", { id: toastId });
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [router]);
+
+  // ✅ INIT SESSION ON MOUNT
+  useEffect(() => {
+    fetchSession();
+  }, [fetchSession]);
 
   return (
     <AuthContext.Provider
       value={{
-        login,
         user,
+        setUser,
+        tentDetails,
+        setTentDetails,
         isAuthenticated,
         loading,
-        tentDetails,
+        login,
         logout,
-        setUser,
+        fetchSession,
       }}
     >
-      {!loading && !loadingOrg && children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

@@ -12,7 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { decryption } from "@/lib/encryption";
 import _ from "lodash";
 import { toast } from "sonner";
-import { rolesApi } from "@/services/settings/config/roles/api";
+// import { rolesApi } from "@/services/settings/config/roles/api";
 
 const fetchUsers = async (tent_uuid) => {
   try {
@@ -115,10 +115,10 @@ export default function UsersPage() {
 
   const loadRoles = async () => {
     try {
-      const response = await rolesApi.getRoles(tentDetails?.tent_uuid, {
-        status: "active",
-      });
-      setRoles(response.data);
+      // const response = await rolesApi.getRoles(tentDetails?.tent_uuid, {
+      //   status: "active",
+      // });
+      // setRoles(response.data);
     } catch (error) {
       console.error("Failed to load roles:", error);
     }

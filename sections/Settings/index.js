@@ -2,11 +2,11 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ConfigurationSettings from "./configuration";
+// import ConfigurationSettings from "./configuration";
 import SecuritySettings from "./security";
 import { GeneralSettings } from "./general";
 import { ThemeSettings } from "./themes";
-import { Separator } from "../ui/separator";
+import { Separator } from "@/components/ui/separator";
 
 export function SettingsTabs() {
   const searchParams = useSearchParams();
@@ -55,7 +55,7 @@ export function SettingsTabs() {
       </TabsContent>
 
       <TabsContent value="configuration">
-        <ConfigurationSettings />
+        {/* <ConfigurationSettings /> */}
       </TabsContent>
     </Tabs>
   );
