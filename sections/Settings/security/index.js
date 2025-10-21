@@ -27,48 +27,12 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
-
-// Mock API functions
-const mockAPI = {
-  getProfile: () =>
-    new Promise((resolve) =>
-      setTimeout(
-        () =>
-          resolve({
-            id: "1",
-            name: "John Doe",
-            email: "john.doe@example.com",
-            contactNumber: "+1 (555) 123-4567",
-            avatar: null,
-          }),
-        2000
-      )
-    ),
-
-  updateProfile: (data) =>
-    new Promise((resolve, reject) =>
-      setTimeout(() => {
-        if (Math.random() > 0.1) {
-          resolve({ success: true, message: "Profile updated successfully" });
-        } else {
-          reject(new Error("Failed to update profile"));
-        }
-      }, 1500)
-    ),
-
-  changePassword: (data) =>
-    new Promise((resolve, reject) =>
-      setTimeout(() => {
-        if (data.currentPassword === "wrongpassword") {
-          reject(new Error("Current password is incorrect"));
-        } else if (Math.random() > 0.1) {
-          resolve({ success: true, message: "Password changed successfully" });
-        } else {
-          reject(new Error("Failed to change password"));
-        }
-      }, 1500)
-    ),
-};
+import {
+  changePassword,
+  getProfile,
+  updateProfile,
+} from "@/services/settings/profile/api";
+import { decryption, encryption } from "@/lib/encryption";
 
 function ProfileCardSkeleton() {
   return (
@@ -125,20 +89,20 @@ const profileSchema = {
   validate: (data) => {
     const errors = {};
 
-    if (!data.name?.trim()) {
-      errors.name = "Name is required";
-    } else if (data.name.trim().length < 2) {
-      errors.name = "Name must be at least 2 characters";
+    if (!data.user_name?.trim()) {
+      errors.user_name = "Name is required";
+    } else if (data.user_name.trim().length < 2) {
+      errors.user_name = "Name must be at least 2 characters";
     }
 
-    if (!data.email?.trim()) {
-      errors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-      errors.email = "Please enter a valid email address";
+    if (!data.user_email?.trim()) {
+      errors.user_email = "Email is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.user_email)) {
+      errors.user_email = "Please enter a valid email address";
     }
 
-    if (data.contactNumber && !/^\+?[\d\s\-\(\)]+$/.test(data.contactNumber)) {
-      errors.contactNumber = "Please enter a valid contact number";
+    if (data.user_phone && !/^\+?[\d\s\-\(\)]+$/.test(data.user_phone)) {
+      errors.user_phone = "Please enter a valid contact number";
     }
 
     return {
@@ -182,20 +146,20 @@ const useForm = (defaultValues = {}, schema = null) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touchedFields, setTouchedFields] = useState({});
 
-  const setValue = (name, value) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
+  const setValue = (user_name, value) => {
+    setValues((prev) => ({ ...prev, [user_name]: value }));
 
     // Mark field as touched
-    setTouchedFields((prev) => ({ ...prev, [name]: true }));
+    setTouchedFields((prev) => ({ ...prev, [user_name]: true }));
 
     // Clear error when user starts typing
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }));
+    if (errors[user_name]) {
+      setErrors((prev) => ({ ...prev, [user_name]: undefined }));
     }
   };
 
-  const setError = (name, error) => {
-    setErrors((prev) => ({ ...prev, [name]: error }));
+  const setError = (user_name, error) => {
+    setErrors((prev) => ({ ...prev, [user_name]: error }));
   };
 
   const clearErrors = () => {
@@ -229,11 +193,11 @@ const useForm = (defaultValues = {}, schema = null) => {
     }
   };
 
-  const register = (name) => ({
-    name,
-    value: values[name] || "",
-    onChange: (e) => setValue(name, e.target.value),
-    onBlur: () => setTouchedFields((prev) => ({ ...prev, [name]: true })),
+  const register = (user_name) => ({
+    user_name,
+    value: values[user_name] || "",
+    onChange: (e) => setValue(user_name, e.target.value),
+    onBlur: () => setTouchedFields((prev) => ({ ...prev, [user_name]: true })),
   });
 
   return {
@@ -256,9 +220,9 @@ function ProfileCard({ profile, onAvatarChange, isLoading }) {
     return <ProfileCardSkeleton />;
   }
 
-  const getInitials = (name) => {
-    return name
-      ? name
+  const getInitials = (user_name) => {
+    return user_name
+      ? user_name
           .split(" ")
           .map((n) => n[0])
           .join("")
@@ -285,7 +249,7 @@ function ProfileCard({ profile, onAvatarChange, isLoading }) {
             <Avatar className="h-24 w-24 md:h-32 md:w-32">
               <AvatarImage src={profile?.avatar} />
               <AvatarFallback className="text-xl md:text-2xl">
-                {getInitials(profile?.name)}
+                {getInitials(profile?.user_name)}
               </AvatarFallback>
             </Avatar>
             <Label
@@ -306,15 +270,15 @@ function ProfileCard({ profile, onAvatarChange, isLoading }) {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-semibold">{profile?.name}</h3>
+            <h3 className="text-xl font-semibold">{profile?.user_name}</h3>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Mail className="h-4 w-4" />
-              <span>{profile?.email}</span>
+              <span>{profile?.user_email}</span>
             </div>
-            {profile?.contactNumber && (
+            {profile?.user_phone && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4" />
-                <span>{profile.contactNumber}</span>
+                <span>{profile.user_phone}</span>
               </div>
             )}
           </div>
@@ -333,9 +297,9 @@ function ProfileCard({ profile, onAvatarChange, isLoading }) {
 function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
   const form = useForm(
     {
-      name: "",
-      email: "",
-      contactNumber: "",
+      user_name: "",
+      user_email: "",
+      user_phone: "",
     },
     profileSchema
   );
@@ -346,9 +310,9 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
   useEffect(() => {
     if (profile) {
       form.reset({
-        name: profile.name || "",
-        email: profile.email || "",
-        contactNumber: profile.contactNumber || "",
+        user_name: profile.user_name || "",
+        user_email: profile.user_email || "",
+        user_phone: profile.user_phone || "",
       });
     }
   }, [profile]);
@@ -356,7 +320,8 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
   const onSubmit = async (data) => {
     setMessage(null);
     try {
-      await mockAPI.updateProfile(data);
+      const body = encryption(data);
+      await updateProfile({ data: body }, profile?.user_uuid);
       setMessage({ type: "success", text: "Profile updated successfully!" });
       onUpdateProfile({ ...profile, ...data });
     } catch (error) {
@@ -387,12 +352,14 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
               <Label htmlFor="name">Full Name *</Label>
               <Input
                 id="name"
-                {...form.register("name")}
-                className={form.errors.name ? "border-red-500" : ""}
+                {...form.register("user_name")}
+                className={form.errors.user_name ? "border-red-500" : ""}
                 placeholder="Enter your full name"
               />
-              {form.errors.name && (
-                <p className="text-sm text-red-500 mt-1">{form.errors.name}</p>
+              {form.errors.user_name && (
+                <p className="text-sm text-red-500 mt-1">
+                  {form.errors.user_name}
+                </p>
               )}
             </div>
 
@@ -401,26 +368,28 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
               <Input
                 id="email"
                 type="email"
-                {...form.register("email")}
-                className={form.errors.email ? "border-red-500" : ""}
+                {...form.register("user_email")}
+                className={form.errors.user_email ? "border-red-500" : ""}
                 placeholder="Enter your email address"
               />
-              {form.errors.email && (
-                <p className="text-sm text-red-500 mt-1">{form.errors.email}</p>
+              {form.errors.user_email && (
+                <p className="text-sm text-red-500 mt-1">
+                  {form.errors.user_email}
+                </p>
               )}
             </div>
 
             <div>
-              <Label htmlFor="contactNumber">Contact Number</Label>
+              <Label htmlFor="user_phone">Contact Number</Label>
               <Input
-                id="contactNumber"
-                {...form.register("contactNumber")}
-                className={form.errors.contactNumber ? "border-red-500" : ""}
+                id="user_phone"
+                {...form.register("user_phone")}
+                className={form.errors.user_phone ? "border-red-500" : ""}
                 placeholder="Enter your contact number"
               />
-              {form.errors.contactNumber && (
+              {form.errors.user_phone && (
                 <p className="text-sm text-red-500 mt-1">
-                  {form.errors.contactNumber}
+                  {form.errors.user_phone}
                 </p>
               )}
             </div>
@@ -432,9 +401,9 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
               variant="outline"
               onClick={() => {
                 form.reset({
-                  name: profile?.name || "",
-                  email: profile?.email || "",
-                  contactNumber: profile?.contactNumber || "",
+                  user_name: profile?.user_name || "",
+                  user_email: profile?.user_email || "",
+                  user_phone: profile?.user_phone || "",
                 });
                 setMessage(null);
               }}
@@ -506,13 +475,17 @@ function PasswordForm() {
   const onSubmit = async (data) => {
     setMessage(null);
     try {
-      await mockAPI.changePassword(data);
+      console.log("data", data);
+      const body = encryption(data);
+      await changePassword({ data: body });
       setMessage({ type: "success", text: "Password changed successfully!" });
       form.reset();
     } catch (error) {
+      console.log("error", error?.response?.data);
+      const decError = decryption(error?.response?.data?.data);
       setMessage({
         type: "error",
-        text: error.message || "Failed to change password",
+        text: decError.message || "Failed to change password",
       });
     }
   };
@@ -773,8 +746,11 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        const profileData = await mockAPI.getProfile();
-        setProfile(profileData);
+        if (!profile?.user_uuid) return;
+        const profileData = await getProfile(profile?.user_uuid);
+        const data = decryption(profileData?.data?.data);
+        console.log("profileData", data);
+        setProfile(data);
       } catch (error) {
         console.error("Failed to load profile:", error);
       } finally {
@@ -783,7 +759,7 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, []);
+  }, [profile?.user_uuid, setProfile]);
 
   return (
     <div className="space-y-8">

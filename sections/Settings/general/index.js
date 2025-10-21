@@ -22,6 +22,7 @@ import axiosInstance from "@/services/network";
 import { decryption, encryption } from "@/lib/encryption";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { getTentDetails } from "@/services/settings/general/api";
 
 // Zod validation schema
 const organizationSchema = z.object({
@@ -192,10 +193,11 @@ export function GeneralSettings() {
       setError(null);
 
       // Replace with your actual API endpoint
-      const response = await axiosInstance.get(
-        `/api/account/tent-details/${tentDetails?.tent_uuid}`
-      );
+      const response = await getTentDetails(tentDetails?.tent_uuid);
+
       const successdata = decryption(response.data?.data);
+
+      console.log("successdata", successdata);
 
       if (!successdata) {
         throw new Error(
@@ -207,13 +209,13 @@ export function GeneralSettings() {
         organizationName: successdata.tent_name || "",
         description: successdata.tent_description || "",
         email: successdata.tent_email || "",
-        contact: successdata.tent_phone_no || "",
+        contact: successdata.tent_phone || "",
         registrationNumber: successdata.tent_gst_no || "",
-        streetAddress: successdata.tent_street || "",
-        city: successdata.tent_city || "",
+        streetAddress: successdata.tent_address1 || "",
+        city: successdata.tent_address2 || "",
         state: successdata.tent_state || "",
         country: successdata.tent_country || "",
-        pincode: successdata.tent_pincode || "",
+        pincode: successdata.tent_postalcode || "",
         website: successdata.tent_web || "",
         facebook: successdata.tent_facebook || "",
         instagram: successdata.tent_insta || "",
@@ -264,6 +266,8 @@ export function GeneralSettings() {
         tent_youtube: data.youtube || null,
         tent_twitter: data.x || null,
       };
+
+      console.log("payload", payload);
 
       const reqBody = encryption(payload);
 

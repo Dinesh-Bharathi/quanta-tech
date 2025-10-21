@@ -11,7 +11,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import { loginUser, getSession, logoutUser } from "@/services/auth/api";
-import { decryption } from "@/lib/encryption"; // optional if your API encrypts
+import { decryption, encryption } from "@/lib/encryption"; // optional if your API encrypts
 
 const AuthContext = createContext();
 
@@ -29,6 +29,9 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  console.log("user", user);
+  console.log("tentDetails", tentDetails);
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -36,10 +39,10 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(
     async (credentials) => {
       const toastId = toast.loading("Logging in...");
-      setLoading(true);
 
       try {
-        const response = await loginUser(credentials);
+        const body = encryption(credentials);
+        const response = await loginUser({ data: body });
         if (response.status === 200) {
           await fetchSession(); // get user info post-login
           toast.success("Login successful", { id: toastId });
@@ -56,8 +59,6 @@ export const AuthProvider = ({ children }) => {
           id: toastId,
         });
         return false;
-      } finally {
-        setLoading(false);
       }
     },
     [router, searchParams]
@@ -68,12 +69,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await getSession();
-      const data = response.data?.data;
-      // const data = decryption(response.data?.data); // if needed
+      // const data = response.data?.data;
+      const data = decryption(response.data?.data); // if needed
 
       if (data) {
-        setUser(data.user || null);
-        setTentDetails(data.tent || null);
+        setUser(data.data.user || null);
+        setTentDetails(data.data.tent || null);
         setIsAuthenticated(true);
       } else {
         setUser(null);
@@ -104,7 +105,7 @@ export const AuthProvider = ({ children }) => {
     try {
       await logoutUser();
       setUser(null);
-      setUser(setTentDetails);
+      setTentDetails(null);
       setIsAuthenticated(false);
       toast.success("Logout successful", { id: toastId });
       router.push("/login");

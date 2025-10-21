@@ -27,15 +27,15 @@ export const useRouteGuard = () => {
       return;
     }
 
-    const modules = user?.allowedModule || {};
-    const accessGranted =
-      modules.mainNavigation?.[pathname] ||
-      modules.footerNavigation?.[
-        pathname + (searchParams?.toString() ? `?${searchParams}` : "")
-      ];
+    // const modules = user?.allowedModule || {};
+    // const accessGranted =
+    //   modules.mainNavigation?.[pathname] ||
+    //   modules.footerNavigation?.[
+    //     pathname + (searchParams?.toString() ? `?${searchParams}` : "")
+    //   ];
 
-    if (!accessGranted) {
-      router.replace("/unauthorized"); // or a custom 403 page
-    }
+    // if (!accessGranted) {
+    //   router.replace("/unauthorized"); // or a custom 403 page
+    // }
   }, [pathname, searchParams, isAuthenticated, loading]);
 };

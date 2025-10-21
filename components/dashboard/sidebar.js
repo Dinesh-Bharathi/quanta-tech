@@ -338,15 +338,15 @@ export function DashboardSidebar({
                             alt="User"
                           />
                           <AvatarFallback className="rounded-lg">
-                            {getInitials(user?.name)}
+                            {getInitials(user?.user_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="grid flex-1 text-left text-sm leading-tight">
                           <span className="truncate font-semibold">
-                            {user?.name || "Unknown User"}
+                            {user?.user_name || "Unknown User"}
                           </span>
                           <span className="truncate text-xs">
-                            {user?.email || "abc@mail.com"}
+                            {user?.user_email || "abc@mail.com"}
                           </span>
                         </div>
                         <ChevronDown className="ml-auto size-4" />
@@ -362,10 +362,10 @@ export function DashboardSidebar({
                   >
                     <div className="text-sm">
                       <div className="font-semibold">
-                        {user?.name || "Unknown User"}
+                        {user?.user_name || "Unknown User"}
                       </div>
                       <div className="text-xs text-muted-foreground">
-                        {user?.email || "abc@mail.com"}
+                        {user?.user_email || "abc@mail.com"}
                       </div>
                     </div>
                   </TooltipContent>
@@ -384,15 +384,15 @@ export function DashboardSidebar({
                         <Avatar className="h-8 w-8 rounded-lg">
                           <AvatarImage src="/placeholder-user.jpg" alt="User" />
                           <AvatarFallback className="rounded-lg">
-                            {getInitials(user?.name)}
+                            {getInitials(user?.user_name)}
                           </AvatarFallback>
                         </Avatar>
                         <div className="grid flex-1 text-left text-sm leading-tight">
                           <span className="truncate font-semibold">
-                            {user?.name || "Unknown User"}
+                            {user?.user_name || "Unknown User"}
                           </span>
                           <span className="truncate text-xs">
-                            {user?.email || "abc@mail.com"}
+                            {user?.user_email || "abc@mail.com"}
                           </span>
                         </div>
                       </div>

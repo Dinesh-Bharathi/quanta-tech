@@ -145,7 +145,15 @@ export function LoginForm() {
 
       {/* Social login placeholder */}
       <div className="grid grid-cols-1 gap-4">
-        <Button variant="outline">
+        <Button
+          variant="outline"
+          onClick={() =>
+            window.open(
+              `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
+              "_self"
+            )
+          }
+        >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             {/* Google SVG */}
             <path
