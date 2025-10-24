@@ -475,13 +475,11 @@ function PasswordForm() {
   const onSubmit = async (data) => {
     setMessage(null);
     try {
-      console.log("data", data);
       const body = encryption(data);
       await changePassword({ data: body });
       setMessage({ type: "success", text: "Password changed successfully!" });
       form.reset();
     } catch (error) {
-      console.log("error", error?.response?.data);
       const decError = decryption(error?.response?.data?.data);
       setMessage({
         type: "error",
@@ -749,7 +747,6 @@ export default function ProfilePage() {
         if (!profile?.user_uuid) return;
         const profileData = await getProfile(profile?.user_uuid);
         const data = decryption(profileData?.data?.data);
-        console.log("profileData", data);
         setProfile(data);
       } catch (error) {
         console.error("Failed to load profile:", error);

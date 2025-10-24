@@ -197,8 +197,6 @@ export function GeneralSettings() {
 
       const successdata = decryption(response.data?.data);
 
-      console.log("successdata", successdata);
-
       if (!successdata) {
         throw new Error(
           `Failed to fetch organization data: ${response.statusText}`
