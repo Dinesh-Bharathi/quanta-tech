@@ -105,11 +105,11 @@ export const AuthProvider = ({ children }) => {
       setTentDetails(null);
       setIsAuthenticated(false);
       toast.success("Logout successful", { id: toastId });
-      router.push("/login");
     } catch (err) {
       console.error("Logout error:", err);
       toast.error("Logout failed", { id: toastId });
     } finally {
+      router.push("/login");
       setLoading(false);
     }
   }, [router]);

@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigation } from "@/hooks/useNavigation";
 import { getIconComponent } from "@/lib/iconMapper";
+import { SidebarSkeleton } from "../dashboard/sidebarSkeleton";
 
 export function DashboardSidebar({
   tentDetails,
@@ -94,15 +95,13 @@ export function DashboardSidebar({
 
   if (loading) {
     return (
-      <Sidebar
+      <SidebarSkeleton
         variant={getSidebarVariant()}
         collapsible={getSidebarCollapsible()}
-        side={layoutConfig.sidebarPosition}
-      >
-        <SidebarContent className="flex items-center justify-center">
-          <div>Loading...</div>
-        </SidebarContent>
-      </Sidebar>
+        position={layoutConfig.sidebarPosition}
+        isStatic={isStatic}
+        isOffcanvas={isOffcanvas}
+      />
     );
   }
 

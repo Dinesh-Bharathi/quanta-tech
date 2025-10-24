@@ -2,7 +2,6 @@
 
 import { useSearchParams, useRouter } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import ConfigurationSettings from "./configuration";
 import SecuritySettings from "./security";
 import { GeneralSettings } from "./general";
 import { ThemeSettings } from "./themes";
@@ -35,9 +34,6 @@ export function SettingsTabs() {
         <TabsTrigger className="px-5" value="theme">
           Theme
         </TabsTrigger>
-        <TabsTrigger className="px-5" value="configuration">
-          Configuration
-        </TabsTrigger>
       </TabsList>
 
       <Separator className="my-4" />
@@ -52,10 +48,6 @@ export function SettingsTabs() {
 
       <TabsContent value="theme">
         <ThemeSettings />
-      </TabsContent>
-
-      <TabsContent value="configuration">
-        {/* <ConfigurationSettings /> */}
       </TabsContent>
     </Tabs>
   );
