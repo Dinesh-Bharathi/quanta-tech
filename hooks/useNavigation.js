@@ -37,9 +37,7 @@ export function useNavigation() {
         console.error("Menu fetch error:", err);
         setError(err.message);
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 5000);
+        setLoading(false);
       }
     };
 

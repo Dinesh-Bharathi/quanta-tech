@@ -87,7 +87,7 @@ export function DashboardHeader() {
           getHeaderHeight(),
           getHeaderPadding(),
           layoutConfig.stickyHeader &&
-            "sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+            "sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-tl-xl rounded-tr-xl",
           layoutConfig.headerHeight === "large" && "gap-4"
         )}
       >
@@ -104,9 +104,8 @@ export function DashboardHeader() {
                 </TooltipContent>
               </Tooltip>
               <div className="hidden items-center gap-2 sm:flex">
-                <Command className="h-4 w-4" />
-                <span className="hidden sm:inline text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-                  Ctrl+B
+                <span className="hidden sm:flex items-center text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full border">
+                  <Command className="h-2.5 w-2.5" /> b
                 </span>
               </div>
               <Separator orientation="vertical" className="mr-2 h-4" />
@@ -211,9 +210,8 @@ export function DashboardHeader() {
               <>
                 <Separator orientation="vertical" className="mx-2 h-4" />
                 <div className="hidden items-center gap-2 sm:flex">
-                  <Command className="h-4 w-4" />
-                  <span className="hidden sm:inline text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded border">
-                    Ctrl+B
+                  <span className="hidden sm:flex items-center text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full border">
+                    <Command className="h-2.5 w-2.5" /> b
                   </span>
                 </div>
                 <Tooltip>
@@ -230,40 +228,4 @@ export function DashboardHeader() {
       </header>
     </TooltipProvider>
   );
-}
-
-{
-  /* Quick Theme Switcher */
-}
-{
-  /* <DropdownMenu>
-  <DropdownMenuTrigger asChild>
-    <Button variant="ghost" size="icon">
-      <Palette className="h-4 w-4" />
-    </Button>
-  </DropdownMenuTrigger>
-  <DropdownMenuContent align="end" className="w-56">
-    <DropdownMenuLabel>Quick Theme Switch</DropdownMenuLabel>
-    <DropdownMenuSeparator />
-    {featuredThemes.map((preset) => (
-      <DropdownMenuItem
-        key={preset.id}
-        onClick={() => handleThemeChange(preset.id)}
-        className="flex items-center justify-between"
-      >
-        <span>{preset.name}</span>
-        {currentThemeId === preset.id && (
-          <div className="w-2 h-2 rounded-full bg-primary" />
-        )}
-      </DropdownMenuItem>
-    ))}
-    <DropdownMenuSeparator />
-    <DropdownMenuItem
-      onClick={() => router.push("/dashboard/settings?tab=theme")}
-    >
-      <Palette className="mr-2 h-4 w-4" />
-      All Themes
-    </DropdownMenuItem>
-  </DropdownMenuContent>
-</DropdownMenu> */
 }

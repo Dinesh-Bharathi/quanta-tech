@@ -1,9 +1,9 @@
-import { DashboardOverview } from "@/components/dashboard/overview"
-import { DashboardStats } from "@/components/dashboard/stats"
-import { RecentActivity } from "@/components/dashboard/recent-activity"
-import { QuickActions } from "@/components/dashboard/quick-actions"
+import { DashboardOverview } from "@/components/dashboard/overview";
+import { DashboardStats } from "@/components/dashboard/stats";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { QuickActions } from "@/components/dashboard/quick-actions";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -22,5 +22,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

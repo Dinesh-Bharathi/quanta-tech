@@ -14,14 +14,14 @@ import { Palette } from "lucide-react";
 const ThemeCustomizationContext = createContext({});
 
 const defaultLayoutConfig = {
-  stickyHeader: false,
+  stickyHeader: true,
   sidebarPosition: "left", // "left" | "right" | "none"
-  sidebarBehavior: "collapsible", // "collapsible" | "offcanvas" | "static"
+  sidebarBehavior: "collapsible", // "collapsible" | "offcanvas" | "static" | "collapsibleCanvas"
   sidebarCollapsed: false,
   headerHeight: "default", // "compact" | "default" | "large"
   footerVisible: true,
   contentMaxWidth: "full", // "full" | "container" | "narrow"
-  spacing: "default", // "compact" | "default" | "spacious"
+  spacing: "compact", // "compact" | "default" | "spacious"
 };
 
 export function ThemeCustomizationProvider({ children }) {

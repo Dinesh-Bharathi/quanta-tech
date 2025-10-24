@@ -29,6 +29,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuAction,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import {
   DropdownMenu,
@@ -64,11 +65,18 @@ export function DashboardSidebar({
   const { layoutConfig } = useThemeCustomization();
   const { mainNavigation, footerNavigation, loading } = useNavigation();
   const [expandedItems, setExpandedItems] = useState(new Set());
+  const { setOpenMobile, isMobile } = useSidebar();
 
   const toggleExpanded = (title) => {
     const newExpanded = new Set(expandedItems);
     newExpanded.has(title) ? newExpanded.delete(title) : newExpanded.add(title);
     setExpandedItems(newExpanded);
+  };
+
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
   };
 
   const getInitials = (name) => {
@@ -119,7 +127,8 @@ export function DashboardSidebar({
             "top-0",
             "overflow-y-auto",
             "flex-shrink-0",
-          ]
+          ],
+          "overflow-x-hidden"
         )}
       >
         {/* Header */}
@@ -128,7 +137,7 @@ export function DashboardSidebar({
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="lg"
-                className="data-[slot=sidebar-menu-button]:!p-1.5"
+                className="data-[slot=sidebar-menu-button]:!p-1.5 rounded-lg"
               >
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Building2 className="size-4" />
@@ -166,7 +175,7 @@ export function DashboardSidebar({
                               <TooltipTrigger asChild>
                                 <SidebarMenuButton
                                   onClick={() => toggleExpanded(item.title)}
-                                  className="w-full justify-between"
+                                  className="w-full justify-between rounded-lg"
                                 >
                                   <div className="flex items-center">
                                     {IconComponent && (
@@ -200,6 +209,7 @@ export function DashboardSidebar({
                                     <SidebarMenuSubButton
                                       asChild
                                       isActive={pathname === subItem.url}
+                                      onClick={handleNavClick}
                                     >
                                       <Link href={subItem.url}>
                                         {subItem.title}
@@ -214,8 +224,10 @@ export function DashboardSidebar({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <SidebarMenuButton
+                                className="rounded-lg"
                                 asChild
                                 isActive={pathname === item.url}
+                                onClick={handleNavClick}
                               >
                                 <Link href={item.url}>
                                   {IconComponent && (
@@ -263,7 +275,8 @@ export function DashboardSidebar({
                           <SidebarMenuButton
                             asChild
                             isActive={pathname.startsWith(item.url)}
-                            className="mb-1"
+                            className="mb-1 rounded-lg"
+                            onClick={handleNavClick}
                           >
                             <Link href={targetUrl}>
                               {IconComponent && (
@@ -287,17 +300,26 @@ export function DashboardSidebar({
                       {hasSubItems && (
                         <DropdownMenu side="right" align="start">
                           <DropdownMenuTrigger asChild>
-                            <SidebarMenuAction>
+                            <SidebarMenuAction className="rounded-lg">
                               <MoreHorizontal />
                             </SidebarMenuAction>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent side="right" align="start">
+                          <DropdownMenuContent
+                            side="right"
+                            align="start"
+                            className="rounded-lg"
+                          >
                             {item.subItems.map((subItem) => {
                               const SubIconComponent = getIconComponent(
                                 subItem.icon
                               );
                               return (
-                                <DropdownMenuItem asChild key={subItem.title}>
+                                <DropdownMenuItem
+                                  className="rounded-lg"
+                                  asChild
+                                  key={subItem.title}
+                                  onClick={handleNavClick}
+                                >
                                   <Link
                                     href={subItem.url}
                                     className="flex items-center gap-2"
@@ -327,7 +349,7 @@ export function DashboardSidebar({
                     <TooltipTrigger asChild>
                       <SidebarMenuButton
                         size="lg"
-                        className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                        className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground rounded-lg"
                       >
                         <Avatar className="h-8 w-8 rounded-lg">
                           <AvatarImage
@@ -368,14 +390,18 @@ export function DashboardSidebar({
                   </TooltipContent>
                 </Tooltip>
                 <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl"
                   side={
                     layoutConfig.sidebarPosition === "right" ? "left" : "right"
                   }
                   align="start"
                   sideOffset={4}
                 >
-                  <DropdownMenuItem asChild>
+                  <DropdownMenuItem
+                    // className="rounded-full"
+                    asChild
+                    onClick={handleNavClick}
+                  >
                     <Link href="/settings?tab=profile">
                       <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                         <Avatar className="h-8 w-8 rounded-lg">
@@ -399,20 +425,29 @@ export function DashboardSidebar({
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="rounded-lg"
+                    onClick={handleNavClick}
+                  >
                     <LifeBuoy className="mr-2 h-4 w-4" />
                     Support
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="rounded-lg"
+                    onClick={handleNavClick}
+                  >
                     <Send className="mr-2 h-4 w-4" />
                     Feedback
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="rounded-kg"
+                    onClick={handleNavClick}
+                  >
                     <Shield className="mr-2 h-4 w-4" />
                     Security
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem className="rounded-lg" onClick={logout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>
