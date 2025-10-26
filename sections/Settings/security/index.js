@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import {
   Card,
@@ -27,11 +28,7 @@ import {
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
-import {
-  changePassword,
-  getProfile,
-  updateProfile,
-} from "@/services/settings/profile/api";
+import ProfileApi from "@/services/settings/profile/api";
 import { decryption, encryption } from "@/lib/encryption";
 
 function ProfileCardSkeleton() {
@@ -321,7 +318,7 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
     setMessage(null);
     try {
       const body = encryption(data);
-      await updateProfile({ data: body }, profile?.user_uuid);
+      await ProfileApi.updateProfile({ data: body }, profile?.user_uuid);
       setMessage({ type: "success", text: "Profile updated successfully!" });
       onUpdateProfile({ ...profile, ...data });
     } catch (error) {
@@ -476,7 +473,7 @@ function PasswordForm() {
     setMessage(null);
     try {
       const body = encryption(data);
-      await changePassword({ data: body });
+      await ProfileApi.changePassword({ data: body });
       setMessage({ type: "success", text: "Password changed successfully!" });
       form.reset();
     } catch (error) {
@@ -745,7 +742,7 @@ export default function ProfilePage() {
     const loadProfile = async () => {
       try {
         if (!profile?.user_uuid) return;
-        const profileData = await getProfile(profile?.user_uuid);
+        const profileData = await ProfileApi.getProfile(profile?.user_uuid);
         const data = decryption(profileData?.data?.data);
         setProfile(data);
       } catch (error) {

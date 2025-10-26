@@ -10,18 +10,11 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-import { loginUser, getSession, logoutUser } from "@/services/auth/api";
-import { decryption, encryption } from "@/lib/encryption"; // optional if your API encrypts
+import AuthApi from "@/services/auth/api";
+import { decryption, encryption } from "@/lib/encryption";
+import { PUBLIC_ROUTES } from "@/constants";
 
 const AuthContext = createContext();
-
-const PUBLIC_ROUTES = [
-  "/",
-  "/login",
-  "/register",
-  "/forgot-password",
-  "/api/auth",
-];
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -39,7 +32,7 @@ export const AuthProvider = ({ children }) => {
 
       try {
         const body = encryption(credentials);
-        const response = await loginUser({ data: body });
+        const response = await AuthApi.loginUser({ data: body });
         if (response.status === 200) {
           await fetchSession(); // get user info post-login
           toast.success("Login successful", { id: toastId });
@@ -65,14 +58,18 @@ export const AuthProvider = ({ children }) => {
   const fetchSession = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getSession();
-      // const data = response.data?.data;
-      const data = decryption(response.data?.data); // if needed
+      const response = await AuthApi.getSession();
+      const data = decryption(response.data?.data);
 
       if (data) {
         setUser(data.data.user || null);
         setTentDetails(data.data.tent || null);
         setIsAuthenticated(true);
+        const currentPath = window.location.pathname;
+        if (PUBLIC_ROUTES.includes(currentPath)) {
+          const redirectPath = searchParams.get("redirect") || "/dashboard";
+          router.push(redirectPath);
+        }
       } else {
         setUser(null);
         setTentDetails(null);
@@ -100,7 +97,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
 
     try {
-      await logoutUser();
+      await AuthApi.logoutUser();
       setUser(null);
       setTentDetails(null);
       setIsAuthenticated(false);

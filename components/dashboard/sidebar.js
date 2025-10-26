@@ -390,7 +390,7 @@ export function DashboardSidebar({
                   </TooltipContent>
                 </Tooltip>
                 <DropdownMenuContent
-                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-xl"
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                   side={
                     layoutConfig.sidebarPosition === "right" ? "left" : "right"
                   }

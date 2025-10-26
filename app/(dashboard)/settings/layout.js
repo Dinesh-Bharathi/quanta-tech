@@ -1,11 +1,15 @@
-import { SettingsTabs } from "@/sections/Settings/index";
+import { SettingsTabs } from "@/sections/Settings";
 
-export default async function ControlsPage() {
+export default function SettingsLayout({ children }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
       </div>
+
+      <SettingsTabs />
+
+      <div>{children}</div>
     </div>
   );
 }

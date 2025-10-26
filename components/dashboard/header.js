@@ -192,9 +192,7 @@ export function DashboardHeader() {
                 </DropdownMenuItem>
               ))}
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => router.push("/settings?tab=theme")}
-              >
+              <DropdownMenuItem onClick={() => router.push("/settings/theme")}>
                 <Palette className="mr-2 h-4 w-4" />
                 All Themes
               </DropdownMenuItem>

@@ -1,6 +1,4 @@
 "use client";
-import { redirect } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,13 +29,7 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
-  const { isAuthenticated } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  // Redirect to dashboard if authenticated
-  if (isAuthenticated) {
-    return redirect("/dashboard");
-  }
 
   const features = [
     {

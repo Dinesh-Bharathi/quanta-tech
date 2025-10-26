@@ -1,13 +1,30 @@
-import { SettingsTabs } from "@/sections/Settings/index";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useNavigation,
+  getFirstAccessibleSubItem,
+} from "@/hooks/useNavigation";
+import Loading from "@/app/(dashboard)/loading";
 
 export default function SettingsPage() {
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-      </div>
+  const router = useRouter();
+  const { footerNavigation, loading } = useNavigation();
 
-      <SettingsTabs />
-    </div>
-  );
+  useEffect(() => {
+    if (loading) return;
+    if (!footerNavigation?.length) return;
+
+    const firstSubItem = getFirstAccessibleSubItem(
+      footerNavigation,
+      "Settings"
+    );
+
+    if (firstSubItem?.url) {
+      router.replace(firstSubItem.url);
+    }
+  }, [footerNavigation, loading, router]);
+
+  return <Loading />;
 }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import AuthApi from "@/services/auth/api";
+import { decryption } from "@/lib/encryption";
 
 export function useNavigation() {
   const { user } = useAuth();
@@ -19,15 +21,8 @@ export function useNavigation() {
     const fetchMenus = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/controls/menu/${user?.user_uuid}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch menus");
-        }
-
-        const data = await response.json();
+        const response = await AuthApi.getUserNavMenus(user?.user_uuid);
+        const data = decryption(response.data?.data);
 
         if (data.success) {
           setMainNavigation(data.mainNavigation || []);
@@ -50,4 +45,20 @@ export function useNavigation() {
     loading,
     error,
   };
+}
+
+export function getFirstAccessibleSubItem(navigation = [], menuTitle = "") {
+  if (!Array.isArray(navigation) || navigation.length === 0) return null;
+
+  const menuItem = navigation
+    .flatMap((section) => section.items)
+    .find((item) => item.title.toLowerCase() === menuTitle.toLowerCase());
+
+  if (!menuItem?.subItems?.length) return null;
+
+  const accessibleSubItem = menuItem.subItems.find(
+    (sub) => sub.permissions?.read
+  );
+
+  return accessibleSubItem || null;
 }

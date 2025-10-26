@@ -1,26 +1,23 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import SecuritySettings from "./security";
-import { GeneralSettings } from "./general";
-import { ThemeSettings } from "./themes";
+import { usePathname, useRouter } from "next/navigation";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
 export function SettingsTabs() {
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const tabParam = searchParams.get("tab") || "general";
+  const pathname = usePathname();
+
+  // Extract last part of path: /settings/general → "general"
+  const activeTab = pathname.split("/").pop();
 
   const handleTabChange = (value) => {
-    const current = new URLSearchParams(Array.from(searchParams.entries()));
-    current.set("tab", value);
-    router.replace(`?${current.toString()}`);
+    router.push(`/settings/${value}`);
   };
 
   return (
     <Tabs
-      value={tabParam}
+      value={activeTab}
       onValueChange={handleTabChange}
       className="space-y-4"
     >
@@ -37,18 +34,6 @@ export function SettingsTabs() {
       </TabsList>
 
       <Separator className="my-4" />
-
-      <TabsContent value="general">
-        <GeneralSettings />
-      </TabsContent>
-
-      <TabsContent value="profile">
-        <SecuritySettings />
-      </TabsContent>
-
-      <TabsContent value="theme">
-        <ThemeSettings />
-      </TabsContent>
     </Tabs>
   );
 }

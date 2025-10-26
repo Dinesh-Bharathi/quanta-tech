@@ -22,7 +22,7 @@ import axiosInstance from "@/services/network";
 import { decryption, encryption } from "@/lib/encryption";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { getTentDetails } from "@/services/settings/general/api";
+import GeneralApi from "@/services/settings/general/api";
 
 // Zod validation schema
 const organizationSchema = z.object({
@@ -192,8 +192,7 @@ export function GeneralSettings() {
       setIsLoading(true);
       setError(null);
 
-      // Replace with your actual API endpoint
-      const response = await getTentDetails(tentDetails?.tent_uuid);
+      const response = await GeneralApi.getTentDetails(tentDetails?.tent_uuid);
 
       const successdata = decryption(response.data?.data);
 

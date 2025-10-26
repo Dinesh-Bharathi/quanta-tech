@@ -7,6 +7,7 @@ import {
   applyThemeToDocument,
   loadThemePreference,
   saveThemePreference,
+  applyThemeWithFontLoading,
 } from "@/lib/theme-utils";
 import { toast } from "sonner";
 import { Palette } from "lucide-react";
@@ -52,7 +53,7 @@ export function ThemeCustomizationProvider({ children }) {
     if (mounted && selectedTheme && resolvedTheme) {
       const themeConfig = themePresets[selectedTheme];
       if (themeConfig) {
-        applyThemeToDocument(themeConfig, resolvedTheme);
+        applyThemeWithFontLoading(themeConfig, resolvedTheme);
       }
     }
   }, [selectedTheme, resolvedTheme, mounted]);
@@ -63,7 +64,7 @@ export function ThemeCustomizationProvider({ children }) {
 
     const themeConfig = themePresets[themeId];
     if (themeConfig && mounted && resolvedTheme) {
-      applyThemeToDocument(themeConfig, resolvedTheme);
+      applyThemeWithFontLoading(themeConfig, resolvedTheme);
       if (themeId === "default") {
         toast.success("Theme reset to Default", {
           icon: <Palette className="w-5 h-5 " />,
