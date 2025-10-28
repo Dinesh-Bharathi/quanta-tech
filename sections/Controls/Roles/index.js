@@ -27,8 +27,10 @@ import {
 import ControlsApi from "@/services/controls/api";
 import { useAuth } from "@/context/AuthContext";
 import DataTable from "@/components/DataTable";
+import { useRouter } from "next/navigation";
 
 const Roles = () => {
+  const router = useRouter();
   const { tentDetails } = useAuth();
   const [loading, setLoading] = useState(true);
   const [rolesList, setRolesList] = useState([]);
@@ -39,7 +41,6 @@ const Roles = () => {
       try {
         const response = await ControlsApi.tenantRoles(tentDetails?.tent_uuid);
         const data = response.data?.data || [];
-        console.log("getTenantRoles", data);
         setRolesList(data);
       } catch (err) {
         console.error("Fetch roles:", err);
@@ -158,7 +159,11 @@ const Roles = () => {
                 Copy role ID
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/controls/roles/edit/${role.role_uuid}`)
+                }
+              >
                 <Edit className="mr-2 h-4 w-4" />
                 Edit role
               </DropdownMenuItem>
@@ -230,7 +235,7 @@ const Roles = () => {
             Manage your team members roles and their permissions with ease
           </p>
         </div>
-        <Button>
+        <Button onClick={() => router.push("/controls/roles/add")}>
           <Plus className="mr-2 h-4 w-4" />
           Add Role
         </Button>

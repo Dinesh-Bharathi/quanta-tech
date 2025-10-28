@@ -53,6 +53,16 @@ import { useNavigation } from "@/hooks/useNavigation";
 import { getIconComponent } from "@/lib/iconMapper";
 import { SidebarSkeleton } from "../dashboard/sidebarSkeleton";
 
+const isRouteActive = (itemUrl, currentPath) => {
+  if (!itemUrl) return false;
+
+  if (itemUrl === "/dashboard") {
+    return currentPath === itemUrl;
+  }
+
+  return currentPath.startsWith(itemUrl);
+};
+
 export function DashboardSidebar({
   tentDetails,
   user,
@@ -167,6 +177,12 @@ export function DashboardSidebar({
                       item.subItems && item.subItems.length > 0;
                     const IconComponent = getIconComponent(item.icon);
 
+                    const isParentActive = hasSubItems
+                      ? item.subItems.some((subItem) =>
+                          isRouteActive(subItem.url, pathname)
+                        )
+                      : false;
+
                     return (
                       <SidebarMenuItem key={item.title}>
                         {hasSubItems ? (
@@ -176,6 +192,7 @@ export function DashboardSidebar({
                                 <SidebarMenuButton
                                   onClick={() => toggleExpanded(item.title)}
                                   className="w-full justify-between rounded-lg"
+                                  isActive={isParentActive}
                                 >
                                   <div className="flex items-center">
                                     {IconComponent && (
@@ -208,7 +225,10 @@ export function DashboardSidebar({
                                   <SidebarMenuSubItem key={subItem.title}>
                                     <SidebarMenuSubButton
                                       asChild
-                                      isActive={pathname === subItem.url}
+                                      isActive={isRouteActive(
+                                        subItem.url,
+                                        pathname
+                                      )}
                                       onClick={handleNavClick}
                                     >
                                       <Link href={subItem.url}>
@@ -226,7 +246,7 @@ export function DashboardSidebar({
                               <SidebarMenuButton
                                 className="rounded-lg"
                                 asChild
-                                isActive={pathname === item.url}
+                                isActive={isRouteActive(item.url, pathname)}
                                 onClick={handleNavClick}
                               >
                                 <Link href={item.url}>

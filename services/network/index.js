@@ -1,5 +1,4 @@
-"use client";
-
+import { PUBLIC_ROUTES } from "@/constants";
 import axios from "axios";
 
 // Create an axios instance with base URL from .env
@@ -30,10 +29,19 @@ axiosInstance.interceptors.response.use(
   },
   (error) => {
     // Handle unauthorized access
-    // if (error.response?.status === 401) {
-    //   const redirectPath = window.location.pathname;
-    //   window.location.href = `/login?redirect=${encodeURIComponent(redirectPath)}`;
-    // }
+    if (error.response?.status === 401 && typeof window !== "undefined") {
+      const currentPath = window.location.pathname;
+
+      // Only redirect if the current path is NOT a public route
+      const isPublic = PUBLIC_ROUTES.some(
+        (route) => route === currentPath || currentPath.startsWith(route)
+      );
+
+      if (!isPublic) {
+        // const redirectPath = encodeURIComponent(currentPath);
+        window.location.replace(`/login?redirect=${currentPath}`);
+      }
+    }
 
     return Promise.reject(error);
   }

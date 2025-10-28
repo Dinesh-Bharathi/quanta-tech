@@ -264,8 +264,6 @@ export function GeneralSettings() {
         tent_twitter: data.x || null,
       };
 
-      console.log("payload", payload);
-
       const reqBody = encryption(payload);
 
       // PUT request with axios instance

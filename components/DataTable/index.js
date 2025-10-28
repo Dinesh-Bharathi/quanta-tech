@@ -103,7 +103,6 @@ const DataTable = ({ columns, rows, globalFilterFn }) => {
                       className="mr-2"
                     />
                     {column.columnDef.headerName}
-                    {console.log("column", column)}
                   </DropdownMenuItem>
                 );
               })}
