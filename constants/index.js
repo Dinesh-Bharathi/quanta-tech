@@ -2,6 +2,8 @@ export const API_ENDPOINTS = {
   LOGIN: "/auth/login",
   SESSION: "/auth/session",
   LOGOUT: "/auth/logout",
+  GOOGLE_LOGIN: "/auth/google/login",
+  GOOGLE_SIGNUP: "/auth/google/signup",
 
   // Controls > User Menus
   USER_NAV_MENUS: "/controls/menu/:userUuid",
@@ -23,7 +25,7 @@ export const API_ENDPOINTS = {
 export const PUBLIC_ROUTES = [
   "/",
   "/login",
-  "/register",
+  "/signup",
   "/forgot-password",
   "/reset-password",
 ];

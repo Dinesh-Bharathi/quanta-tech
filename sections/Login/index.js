@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
+import { API_ENDPOINTS } from "@/constants";
 
 // Zod Schema
 const loginSchema = z.object({
@@ -147,12 +148,11 @@ export function LoginForm() {
       <div className="grid grid-cols-1 gap-4">
         <Button
           variant="outline"
-          onClick={() =>
-            window.open(
-              `${process.env.NEXT_PUBLIC_API_URL}/auth/google`,
-              "_self"
-            )
-          }
+          onClick={() => {
+            const APIURL = process.env.NEXT_PUBLIC_API_URL;
+            const signupUrl = APIURL.concat(API_ENDPOINTS.GOOGLE_LOGIN);
+            window.open(signupUrl.toString(), "_self");
+          }}
         >
           <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
             {/* Google SVG */}
@@ -180,7 +180,7 @@ export function LoginForm() {
       {/* Footer */}
       <div className="text-center text-sm">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-primary hover:underline">
+        <Link href="/signup" className="text-primary hover:underline">
           Sign up
         </Link>
       </div>

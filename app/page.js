@@ -187,7 +187,7 @@ export default function HomePage() {
                     Login
                   </Button>
                 </Link>
-                <Link href="/register">
+                <Link href="/signup">
                   <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                     Get Started
                   </Button>
@@ -214,7 +214,7 @@ export default function HomePage() {
               our all-in-one SaaS platform. Built for growing businesses.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/register">
+              <Link href="/signup">
                 <Button
                   size="lg"
                   className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg group"
@@ -397,7 +397,7 @@ export default function HomePage() {
                   <CheckCircle className="h-5 w-5 text-primary" />
                   <span className="text-foreground">Email support</span>
                 </div>
-                <Link href="/register" className="block pt-4">
+                <Link href="/signup" className="block pt-4">
                   <Button className="w-full" variant="outline">
                     Get Started
                   </Button>
@@ -437,7 +437,7 @@ export default function HomePage() {
                   <CheckCircle className="h-5 w-5 text-primary" />
                   <span className="text-foreground">API access</span>
                 </div>
-                <Link href="/register" className="block pt-4">
+                <Link href="/signup" className="block pt-4">
                   <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
                     Get Started
                   </Button>
@@ -474,7 +474,7 @@ export default function HomePage() {
                   <CheckCircle className="h-5 w-5 text-primary" />
                   <span className="text-foreground">Dedicated manager</span>
                 </div>
-                <Link href="/register" className="block pt-4">
+                <Link href="/signup" className="block pt-4">
                   <Button className="w-full" variant="outline">
                     Contact Sales
                   </Button>
@@ -496,7 +496,7 @@ export default function HomePage() {
             with Quanta
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/register">
+            <Link href="/signup">
               <Button
                 size="lg"
                 className="bg-background text-foreground hover:bg-background/90 px-8 py-3 text-lg"
