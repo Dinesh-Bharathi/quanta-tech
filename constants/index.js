@@ -13,6 +13,7 @@ export const API_ENDPOINTS = {
   ADD_TENANT_ROLE: "/controls/tenant/roles/:tentUuid",
   GET_TENANT_ROLE_BY_UUID: "/controls/tenant/role/permission/:roleUuid",
   UPDATE_TENANT_ROLE: "/controls/tenant/role/permission/:roleUuid",
+  DELETE_TENANT_ROLE: "/controls/tenant/role/permission/:roleUuid",
 
   // Settings > General
   GET_TENT_DETAILS: "/settings/tent-details/:tentUuid",

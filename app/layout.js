@@ -3,6 +3,8 @@ import { ThemeProvider } from "next-themes";
 import { ThemeCustomizationProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
+import { ConfirmationProvider } from "@/context/ConfirmationContext";
+import ConfirmationPrompt from "@/components/ConfirmationPrompt";
 import Loading from "./loading";
 
 export const metadata = {
@@ -24,14 +26,18 @@ export default function RootLayout({ children }) {
         >
           <ThemeCustomizationProvider>
             <AuthProvider>
-              {children}
-              {/* <Loading /> */}
-              <Toaster
-                toastOptions={{ className: "sonner-toast" }}
-                position="top-right"
-                richColors
-                closeButton
-              />
+              <ConfirmationProvider>
+                {children}
+                {/* <Loading /> */}
+                <Toaster
+                  toastOptions={{ className: "sonner-toast" }}
+                  position="bottom-right"
+                  duration={2000}
+                  richColors
+                  closeButton
+                />
+                <ConfirmationPrompt />
+              </ConfirmationProvider>
             </AuthProvider>
           </ThemeCustomizationProvider>
         </ThemeProvider>

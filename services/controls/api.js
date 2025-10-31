@@ -38,4 +38,12 @@ export default {
     );
     return await axiosInstance.put(endpoint, data);
   },
+  deleteTenantRole: async (roleUuid) => {
+    const endpoint = API_ENDPOINTS.DELETE_TENANT_ROLE.replace(
+      ":roleUuid",
+      roleUuid
+    );
+
+    return axiosInstance.delete(endpoint, {});
+  },
 };

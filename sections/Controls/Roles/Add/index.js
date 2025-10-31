@@ -20,10 +20,15 @@ import { MenuItemCard } from "./MenuItemCard";
 import { ArrowLeft, Save } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ControlsApi from "@/services/controls/api";
+import { decryption, encryption } from "@/lib/encryption";
+import { toast } from "sonner";
+import Loading from "@/app/(dashboard)/loading";
 
-const RolesAdd = ({ mode = "add", roleUuid, roleData }) => {
+const RolesAdd = ({ mode = "add", roleUuid }) => {
   const { user, tentDetails } = useAuth();
   const router = useRouter();
+  const [loadingEditData, setLoadingEditData] = useState(mode === "edit");
+  const [roleData, setRoleData] = useState({});
   const [mainNavigation, setMainNavigation] = useState([]);
   const [footerNavigation, setFooterNavigation] = useState([]);
   const [loadingMenus, setLoadingMenus] = useState(true);
@@ -37,7 +42,8 @@ const RolesAdd = ({ mode = "add", roleUuid, roleData }) => {
         const response = await ControlsApi.tenantSubscribedMenus(
           tentDetails?.tent_uuid
         );
-        const data = response.data?.data || {
+        const decryptRes = decryption(response.data.data);
+        const data = decryptRes.data || {
           mainNavigation: [],
           footerNavigation: [],
         };
@@ -54,6 +60,26 @@ const RolesAdd = ({ mode = "add", roleUuid, roleData }) => {
       fetchSubscribedMenus();
     }
   }, [tentDetails?.tent_uuid]);
+
+  useEffect(() => {
+    const fetchEditRolesData = async () => {
+      setLoadingEditData(true);
+      try {
+        const response = await ControlsApi.getTenantRoleByUuid(roleUuid);
+        const decryptRes = decryption(response.data.data);
+        const data = decryptRes.data;
+        setRoleData(data);
+      } catch (err) {
+        console.error("Fetch subscribed menus:", err);
+      } finally {
+        setLoadingEditData(false);
+      }
+    };
+
+    if (mode === "edit") {
+      fetchEditRolesData();
+    }
+  }, [mode, roleUuid]);
 
   const createFormSchema = () => {
     return z.object({
@@ -78,10 +104,11 @@ const RolesAdd = ({ mode = "add", roleUuid, roleData }) => {
 
   // Update form values when roleData is available
   useEffect(() => {
-    if (mode === "edit" && roleData?.data) {
+    if (mode === "edit" && roleData) {
+      console.log("first", roleData.roleName);
       form.reset({
-        roleName: roleData.data.roleName || "",
-        description: roleData.data.description || "",
+        roleName: roleData.roleName || "",
+        description: roleData.description || "",
       });
     }
   }, [mode, roleData, form]);
@@ -115,8 +142,8 @@ const RolesAdd = ({ mode = "add", roleUuid, roleData }) => {
     footerNavigation.forEach((group) => processItems(group.items));
 
     // If in edit mode and we have existing permissions, merge them
-    if (mode === "edit" && roleData?.data?.permissions) {
-      const existingPermissions = roleData.data.permissions;
+    if (mode === "edit" && roleData?.permissions) {
+      const existingPermissions = roleData.permissions;
       Object.keys(existingPermissions).forEach((key) => {
         if (initPermissions[key]) {
           initPermissions[key] = { ...existingPermissions[key] };
@@ -486,17 +513,36 @@ const RolesAdd = ({ mode = "add", roleUuid, roleData }) => {
         permissions: menuPermissions,
       };
 
+      const body = encryption(payload);
+
       if (mode === "edit") {
-        await ControlsApi.updateTenantRole(roleUuid, payload);
+        const res = await ControlsApi.updateTenantRole(roleUuid, {
+          data: body,
+        });
+
+        const decryptRes = decryption(res.data.data);
+
+        toast.success(decryptRes?.message || "Success");
       } else {
-        await ControlsApi.addTenantRole(tentDetails?.tent_uuid, payload);
+        const res = await ControlsApi.addTenantRole(tentDetails?.tent_uuid, {
+          data: body,
+        });
+
+        const decryptRes = decryption(res.data.data);
+
+        toast.success(decryptRes?.message || "Success");
       }
 
       router.push("/controls/roles");
     } catch (error) {
-      console.error("Error creating role:", error);
+      const err = decryption(error, "error");
+      console.log("err", err);
+      toast.error(err?.message || "Please try again");
+      console.error("Error creating/updating role:", error);
     }
   };
+
+  if (loadingEditData) return <Loading />;
 
   if (loadingMenus) {
     return (

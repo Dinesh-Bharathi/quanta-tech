@@ -12,5 +12,5 @@ export default async function RolesEditPage({ params }) {
 
   const roleData = await res.json();
 
-  return <RolesAdd mode="edit" roleUuid={id} roleData={roleData} />;
+  return <RolesAdd mode="edit" roleUuid={id} roleData={roleData?.data || {}} />;
 }
