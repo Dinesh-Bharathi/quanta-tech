@@ -1,7 +1,5 @@
-import React from "react";
+import Users from "@/sections/Controls/Users";
 
-const UsersPage = () => {
-  return <div>UsersPage</div>;
-};
-
-export default UsersPage;
+export default async function UsersPage() {
+  return <Users />;
+}

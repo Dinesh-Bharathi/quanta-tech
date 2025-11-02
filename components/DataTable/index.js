@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -24,7 +24,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronDown, Search, Grid3x3, List } from "lucide-react";
+import {
+  ChevronDown,
+  Search,
+  Grid3x3,
+  List,
+  Filter,
+  X,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -34,6 +43,27 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "../ui/command";
+import * as XLSX from "xlsx";
+
+// Map column keys to their display labels
+const FILTER_LABELS = {
+  is_active: {
+    1: "Active",
+    0: "Inactive",
+    true: "Active",
+    false: "Inactive",
+  },
+};
 
 const DataTable = ({
   columns,
@@ -41,18 +71,34 @@ const DataTable = ({
   globalFilterFn,
   onDataTableSearch,
   searchplaceholder,
+  filterColumns = [],
 }) => {
   const [sorting, setSorting] = useState([]);
   const [columnFilters, setColumnFilters] = useState([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [rowSelection, setRowSelection] = useState({});
   const [globalFilter, setGlobalFilter] = useState("");
+  const [columnFilterValues, setColumnFilterValues] = useState({});
   const [viewMode, setViewMode] = useState(() => {
     if (typeof window !== "undefined") {
       return localStorage.getItem("dataTableViewMode") || "table";
     }
     return "table";
   });
+
+  const [searchQuery, setSearchQuery] = useState({});
+  const [openFilter, setOpenFilter] = useState(null);
+
+  const handleFilterPopoverToggle = (columnKey) => {
+    setOpenFilter((prev) => (prev === columnKey ? null : columnKey));
+  };
+
+  const handleSearchChange = (columnKey, value) => {
+    setSearchQuery((prev) => ({
+      ...prev,
+      [columnKey]: value,
+    }));
+  };
 
   const handleViewModeChange = (mode) => {
     setViewMode(mode);
@@ -68,8 +114,98 @@ const DataTable = ({
     }
   };
 
+  const getUniqueColumnValues = (rows, columnKey) => {
+    const values = rows
+      .map((row) => String(row[columnKey]))
+      .filter((v) => v !== "null" && v !== "undefined" && v !== "");
+    return [...new Set(values)].sort();
+  };
+
+  const filterOptionsMap = useMemo(() => {
+    const optionsMap = {};
+    filterColumns.forEach((columnKey) => {
+      optionsMap[columnKey] = getUniqueColumnValues(rows, columnKey);
+    });
+    return optionsMap;
+  }, [rows, filterColumns]);
+
+  const filteredOptions = useMemo(() => {
+    const map = {};
+    filterColumns.forEach((columnKey) => {
+      const query = (searchQuery[columnKey] || "").toLowerCase();
+      const options = filterOptionsMap[columnKey] || [];
+      map[columnKey] = query
+        ? options.filter((opt) => opt.toLowerCase().includes(query))
+        : options;
+    });
+    return map;
+  }, [filterOptionsMap, searchQuery]);
+
+  const handleColumnFilterChange = (columnKey, value, checked) => {
+    setColumnFilterValues((prev) => {
+      const currentFilters = prev[columnKey] || [];
+      if (checked) {
+        return {
+          ...prev,
+          [columnKey]: [...currentFilters, value],
+        };
+      } else {
+        return {
+          ...prev,
+          [columnKey]: currentFilters.filter((v) => v !== value),
+        };
+      }
+    });
+  };
+
+  const handleClearColumnFilter = (columnKey) => {
+    setColumnFilterValues((prev) => ({
+      ...prev,
+      [columnKey]: [],
+    }));
+  };
+
+  const customFilterFn = useCallback(
+    (row) => {
+      const hasActiveFilters = Object.values(columnFilterValues).some(
+        (filters) => filters.length > 0
+      );
+
+      if (!hasActiveFilters) return true;
+
+      return Object.entries(columnFilterValues).every(
+        ([columnKey, selectedValues]) => {
+          if (selectedValues.length === 0) return true;
+          const cellValue = row.original
+            ? row.original[columnKey]
+            : row[columnKey];
+          return selectedValues.includes(cellValue);
+        }
+      );
+    },
+    [columnFilterValues]
+  );
+
+  const filteredRowsByColumnFilter = useMemo(() => {
+    return rows.filter(customFilterFn);
+  }, [rows, columnFilterValues]);
+
+  const optionCounts = useMemo(() => {
+    const counts = {};
+    filterColumns.forEach((columnKey) => {
+      const map = {};
+      rows.forEach((r) => {
+        const raw = r[columnKey];
+        const key = String(raw); // normalize to string to match filterOptionsMap
+        map[key] = (map[key] || 0) + 1;
+      });
+      counts[columnKey] = map;
+    });
+    return counts;
+  }, [rows, filterColumns]);
+
   const table = useReactTable({
-    data: rows,
+    data: filteredRowsByColumnFilter,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -89,6 +225,95 @@ const DataTable = ({
       globalFilter,
     },
   });
+
+  // Generate export data for currently visible columns (excluding "actions")
+  const getVisibleData = () => {
+    const visibleCols = table
+      .getAllColumns()
+      .filter(
+        (col) =>
+          col.getIsVisible() &&
+          col.id !== "actions" &&
+          (col.accessorKey || typeof col.accessorFn === "function")
+      )
+      .map((col) => ({
+        key: col.accessorKey,
+        header: col.columnDef.headerName || col.id,
+        accessorFn: col.accessorFn,
+      }));
+
+    const exportData = table.getFilteredRowModel().rows.map((row) => {
+      const obj = {};
+
+      visibleCols.forEach(({ key, header, accessorFn }) => {
+        let value = key ? row.original?.[key] : accessorFn?.(row.original);
+
+        // ✅ Handle boolean/numeric fields like is_active properly
+        if (key === "is_active") {
+          const normalized = value === true || value === 1 ? true : false;
+          value = normalized ? "Active" : "Inactive";
+        }
+
+        // ✅ Also apply FILTER_LABELS if present
+        if (FILTER_LABELS?.[key]) {
+          const labelMap = FILTER_LABELS[key];
+          // normalize the key to string, number, or boolean
+          const lookupKey =
+            typeof value === "boolean"
+              ? value
+              : value === 1
+              ? true
+              : value === 0
+              ? false
+              : value;
+          value = labelMap[lookupKey] ?? value;
+        }
+
+        // ✅ Format date fields nicely (optional)
+        if (key === "created_at" && value) {
+          value = new Date(value).toLocaleDateString();
+        }
+
+        obj[header] = value ?? "";
+      });
+
+      return obj;
+    });
+
+    return { visibleCols, exportData };
+  };
+
+  // Export as CSV
+  const exportToCSV = () => {
+    const { exportData } = getVisibleData();
+    if (!exportData.length) return alert("No data to export!");
+
+    const headers = Object.keys(exportData[0]);
+    const csvRows = [
+      headers.join(","),
+      ...exportData.map((row) =>
+        headers.map((field) => JSON.stringify(row[field] ?? "")).join(",")
+      ),
+    ];
+
+    const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "table_data.csv";
+    link.click();
+  };
+
+  // Export as Excel
+  const exportToExcel = () => {
+    const { exportData } = getVisibleData();
+    if (!exportData.length) return alert("No data to export!");
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Data");
+    XLSX.writeFile(wb, "table_data.xlsx");
+  };
 
   const renderCardView = () => {
     return (
@@ -168,6 +393,100 @@ const DataTable = ({
               className="pl-10 bg-background border-border"
             />
           </div>
+          {filterColumns.map((columnKey) => {
+            const column = columns.find((col) => col.accessorKey === columnKey);
+            const columnName =
+              column?.headerName || columnKey.replace(/_/g, " ");
+            const filterCount = (columnFilterValues[columnKey] || []).length;
+            {
+              /* const options = filterOptionsMap[columnKey] || []; */
+            }
+
+            return (
+              <Popover
+                key={columnKey}
+                open={openFilter === columnKey}
+                onOpenChange={() => handleFilterPopoverToggle(columnKey)}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    // variant={filterCount > 0 ? "default" : "outline"}
+                    variant={"outline"}
+                    size="default"
+                    className="px-3 text-sm font-medium flex items-center gap-2 border-dashed "
+                  >
+                    <Filter className="h-3 w-3 opacity-50" />
+                    {columnName}
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent className="p-0 w-56">
+                  <Command>
+                    <CommandInput placeholder={`Search ${columnName}...`} />
+                    <CommandList>
+                      <CommandEmpty>No results found.</CommandEmpty>
+                      <CommandGroup>
+                        {filterOptionsMap[columnKey]?.map((rawValue) => {
+                          const isSelected = (
+                            columnFilterValues[columnKey] || []
+                          ).includes(rawValue);
+
+                          // Derive human-readable label (fallback to raw value)
+                          const displayLabel =
+                            FILTER_LABELS[columnKey]?.[rawValue] ?? rawValue;
+
+                          return (
+                            <CommandItem
+                              key={rawValue}
+                              onSelect={() =>
+                                handleColumnFilterChange(
+                                  columnKey,
+                                  rawValue,
+                                  !isSelected
+                                )
+                              }
+                              className="flex items-center justify-between cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Check
+                                  className={`h-4 w-4 ${
+                                    isSelected ? "opacity-100" : "opacity-0"
+                                  }`}
+                                />
+                                {displayLabel}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {optionCounts[columnKey]?.[rawValue] ||
+                                  rawValue ||
+                                  0}
+                              </span>
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+
+                      {/* Clear Filters button at bottom */}
+                      {filterCount > 0 && (
+                        <>
+                          <CommandSeparator />
+                          <div className="p-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleClearColumnFilter(columnKey)}
+                              className="w-full h-8 text-xs"
+                            >
+                              Clear Filters
+                            </Button>
+                          </div>
+                        </>
+                      )}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            );
+          })}
         </div>
 
         <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -179,7 +498,7 @@ const DataTable = ({
               className="rounded-none rounded-l-md"
             >
               <List className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Table</span>
+              {/* <span className="hidden sm:inline ml-2">Table</span> */}
             </Button>
             <Button
               variant={viewMode === "card" ? "default" : "ghost"}
@@ -188,9 +507,25 @@ const DataTable = ({
               className="rounded-none rounded-r-md"
             >
               <Grid3x3 className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Card</span>
+              {/* <span className="hidden sm:inline ml-2">Card</span> */}
             </Button>
           </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="border-border bg-background">
+                Export <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-border">
+              <DropdownMenuItem onClick={exportToCSV}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportToExcel}>
+                Export as Excel
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

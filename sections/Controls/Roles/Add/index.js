@@ -27,7 +27,7 @@ import Loading from "@/app/(dashboard)/loading";
 const RolesAdd = ({ mode = "add", roleUuid }) => {
   const { user, tentDetails } = useAuth();
   const router = useRouter();
-  const [loadingEditData, setLoadingEditData] = useState(mode === "edit");
+  const [loadingData, setLoadingData] = useState(mode === "edit");
   const [roleData, setRoleData] = useState({});
   const [mainNavigation, setMainNavigation] = useState([]);
   const [footerNavigation, setFooterNavigation] = useState([]);
@@ -63,7 +63,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
 
   useEffect(() => {
     const fetchEditRolesData = async () => {
-      setLoadingEditData(true);
+      setLoadingData(true);
       try {
         const response = await ControlsApi.getTenantRoleByUuid(roleUuid);
         const decryptRes = decryption(response.data.data);
@@ -72,7 +72,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       } catch (err) {
         console.error("Fetch subscribed menus:", err);
       } finally {
-        setLoadingEditData(false);
+        setLoadingData(false);
       }
     };
 
@@ -105,7 +105,6 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
   // Update form values when roleData is available
   useEffect(() => {
     if (mode === "edit" && roleData) {
-      console.log("first", roleData.roleName);
       form.reset({
         roleName: roleData.roleName || "",
         description: roleData.description || "",
@@ -536,13 +535,12 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       router.push("/controls/roles");
     } catch (error) {
       const err = decryption(error, "error");
-      console.log("err", err);
       toast.error(err?.message || "Please try again");
       console.error("Error creating/updating role:", error);
     }
   };
 
-  if (loadingEditData) return <Loading />;
+  if (loadingData) return <Loading />;
 
   if (loadingMenus) {
     return (

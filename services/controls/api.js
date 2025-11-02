@@ -3,6 +3,7 @@ import { API_ENDPOINTS } from "@/constants";
 import axiosInstance from "@/services/network/index";
 
 export default {
+  // DynamicMenu
   tenantSubscribedMenus: async (tentUuid) => {
     const endpoint = API_ENDPOINTS.GET_SUBSCRIBED_MENUS.replace(
       ":tentUuid",
@@ -10,6 +11,8 @@ export default {
     );
     return await axiosInstance.get(endpoint);
   },
+
+  // Roles
   tenantRoles: async (tentUuid) => {
     const endpoint = API_ENDPOINTS.GET_TENT_ROLES.replace(
       ":tentUuid",
@@ -45,5 +48,38 @@ export default {
     );
 
     return axiosInstance.delete(endpoint, {});
+  },
+
+  // Users
+  getTenantUsers: async (tentUuid) => {
+    const endpoint = API_ENDPOINTS.GET_TENANT_USERS.replace(
+      ":tentUuid",
+      tentUuid
+    );
+    return await axiosInstance.get(endpoint);
+  },
+
+  createTenantUser: async (tentUuid, data) => {
+    const endpoint = API_ENDPOINTS.CREATE_TENANT_USER.replace(
+      ":tentUuid",
+      tentUuid
+    );
+    return await axiosInstance.post(endpoint, data);
+  },
+
+  updateTenantUser: async (userUuid, data) => {
+    const endpoint = API_ENDPOINTS.UPDATE_TENANT_USER.replace(
+      ":userUuid",
+      userUuid
+    );
+    return await axiosInstance.put(endpoint, data);
+  },
+
+  deleteTenantUser: async (userUuid) => {
+    const endpoint = API_ENDPOINTS.DELETE_TENANT_USER.replace(
+      ":userUuid",
+      userUuid
+    );
+    return await axiosInstance.delete(endpoint);
   },
 };

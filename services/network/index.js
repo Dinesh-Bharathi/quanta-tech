@@ -32,14 +32,10 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401 && typeof window !== "undefined") {
       const currentPath = window.location.pathname;
 
-      console.log("errorstatus", error.response?.status);
-
       // Only redirect if the current path is NOT a public route
       const isPublic = PUBLIC_ROUTES.some(
         (route) => route === currentPath || currentPath.startsWith(route)
       );
-
-      console.log("isPublic", isPublic, currentPath);
 
       if (!isPublic) {
         // const redirectPath = encodeURIComponent(currentPath);
