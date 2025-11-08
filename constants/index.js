@@ -32,6 +32,8 @@ export const PUBLIC_ROUTES = [
   "/",
   "/login",
   "/signup",
+  "/signup/onboarding",
+  "/singnup/plans",
   "/forgot-password",
   "/reset-password",
 ];

@@ -1,68 +1,66 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { Mail, User, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
+import { Separator } from "@/components/ui/separator";
+import { useRouter } from "next/navigation";
 
-// Zod Schema
-const loginSchema = 
-z.object({
-  email: z.string().email({ message: "Invalid email address" }), 
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
+// Validation
+const formSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-export function LoginForm() {
-  const { login } = useAuth();
+const SignupForm = () => {
+const router = useRouter()
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    criteriaMode: "all",
-    shouldFocusError: true,
-    shouldUnregister: true,
-    shouldUseNativeValidation: false,
-    delayError: 0,
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(formSchema),
   });
 
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = async (data) => {
-    setIsLoading(true);
-
-    try {
-      await login(data);
-    } catch (err) {
-      console.error(err.message || "Login failed");
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (data) => {
+    console.log("Form Data:", data);
+    router.push('/signup/onboarding')
   };
 
   return (
     <div className="space-y-4">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-5 max-w-sm mx-auto p-1 rounded-lg "
+      >
+        {/* Username */}
+        <div className="space-y-2">
+          <Label htmlFor="username">Username</Label>
+          <div className="relative">
+            <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="username"
+              placeholder="Enter your username"
+              className="pl-10"
+              {...register("username")}
+            />
+          </div>
+          {errors.username && (
+            <p className="text-sm text-red-500">{errors.username.message}</p>
+          )}
+        </div>
+
         {/* Email */}
         <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
@@ -77,7 +75,7 @@ export function LoginForm() {
             />
           </div>
           {errors.email && (
-            <p className="text-sm text-red-600">{errors.email.message}</p>
+            <p className="text-sm text-red-500">{errors.email.message}</p>
           )}
         </div>
 
@@ -112,46 +110,31 @@ export function LoginForm() {
           )}
         </div>
 
-        {/* Remember me + Forgot password */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Checkbox id="remember" />
-            <Label htmlFor="remember" className="text-sm">
-              Remember me
-            </Label>
-          </div>
-          <Link
-            href="/forgot-password"
-            className="text-sm text-primary hover:underline"
-          >
-            Forgot password?
-          </Link>
-        </div>
-
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Signing in..." : "Sign in"}
+        {/* Submit Button */}
+        <Button type="submit" className="w-full">
+          Sign Up
         </Button>
+
+        {/* Divider */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <Separator className="w-full" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or continue with
+            </span>
+          </div>
+        </div>
       </form>
 
-      {/* Divider */}
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator className="w-full" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
-          </span>
-        </div>
-      </div>
-
-      {/* Social login placeholder */}
-      <div className="grid grid-cols-1 gap-4">
+      {/* Social media */}
+      <div className="grid grid-cols-1 gap-4 mt-2">
         <Button
           variant="outline"
           onClick={() => {
             const APIURL = process.env.NEXT_PUBLIC_API_URL;
-            const signupUrl = APIURL.concat(API_ENDPOINTS.GOOGLE_LOGIN);
+            const signupUrl = APIURL.concat(API_ENDPOINTS.GOOGLE_SIGNUP);
             window.open(signupUrl.toString(), "_self");
           }}
         >
@@ -176,15 +159,18 @@ export function LoginForm() {
           </svg>
           Google
         </Button>
-      </div>
 
-      {/* Footer */}
-      <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
-        <Link href="/signup" className="text-primary hover:underline">
-          Sign up
-        </Link>
+        <div className="text-center text-sm">
+          Already have an account?{" "}
+          <Link href="/login" className="text-primary hover:underline">
+            Login
+          </Link>
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default SignupForm;
+
+
