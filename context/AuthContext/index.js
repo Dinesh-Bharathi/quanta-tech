@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
 
       if (data) {
         setUser(data.data.user || null);
-        setTentDetails(data.data.tent || null);
+        setTentDetails(data.data.tenant || null);
         setIsAuthenticated(true);
         const currentPath = window.location.pathname;
         if (PUBLIC_ROUTES.includes(currentPath)) {
