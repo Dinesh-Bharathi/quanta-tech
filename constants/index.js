@@ -4,6 +4,10 @@ export const API_ENDPOINTS = {
   LOGOUT: "/auth/logout",
   GOOGLE_LOGIN: "/auth/google/login",
   GOOGLE_SIGNUP: "/auth/google/signup",
+  SIGNUP: "/auth/signup",
+  SEND_VERIFICATION_EMAIL: "/auth/send-verification",
+  RESEND_VERIFICATION_EMAIL:"/auth/resend-verification",
+
 
   // Controls > User Menus
   USER_NAV_MENUS: "/controls/menu/:userUuid",

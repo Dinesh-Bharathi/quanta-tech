@@ -20,4 +20,13 @@ export default {
     );
     return await axiosInstance.get(endpoint);
   },
+  signupUser: async (payload) => {
+    return await axiosInstance.post(API_ENDPOINTS.SIGNUP, payload);
+  },
+   sendVerificationEmail: async (payload) => {
+    return await axiosInstance.post(API_ENDPOINTS.SEND_VERIFICATION_EMAIL, payload);
+  },
+   resendVerificationEmail: async (payload) => {
+    return await axiosInstance.post(API_ENDPOINTS.RESEND_VERIFICATION_EMAIL, payload);
+  },
 };
