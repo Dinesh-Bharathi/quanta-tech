@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 
 export default function DashboardLayout({ children }) {
-  const { tentDetails, user } = useAuth();
+  const { tentDetails, user, userBranch, branchesList } = useAuth();
   const { layoutConfig } = useThemeCustomization();
 
   useRouteGuard();
@@ -51,6 +51,8 @@ export default function DashboardLayout({ children }) {
         <DashboardSidebar
           tentDetails={tentDetails}
           user={user}
+          userBranch={userBranch}
+          branchesList={branchesList}
           isOffcanvas={true}
         />
         <div className="flex-1 flex flex-col min-h-screen">
@@ -89,6 +91,8 @@ export default function DashboardLayout({ children }) {
       <DashboardSidebar
         tentDetails={tentDetails}
         user={user}
+        userBranch={userBranch}
+        branchesList={branchesList}
         isStatic={layoutConfig.sidebarBehavior === "static"}
         isCollapseOffcanvas={
           layoutConfig.sidebarBehavior === "collapsibleCanvas"

@@ -52,6 +52,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigation } from "@/hooks/useNavigation";
 import { getIconComponent } from "@/lib/iconMapper";
 import { SidebarSkeleton } from "../dashboard/sidebarSkeleton";
+import { BranchSwitcher } from "../dashboard/branchSwitcher";
 
 const isRouteActive = (itemUrl, currentPath) => {
   if (!itemUrl) return false;
@@ -66,6 +67,8 @@ const isRouteActive = (itemUrl, currentPath) => {
 export function DashboardSidebar({
   tentDetails,
   user,
+  userBranch,
+  branchesList,
   isOffcanvas = false,
   isStatic = false,
   isCollapseOffcanvas = false,
@@ -143,7 +146,7 @@ export function DashboardSidebar({
       >
         {/* Header */}
         <SidebarHeader>
-          <SidebarMenu>
+          {/* <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
                 size="lg"
@@ -157,12 +160,17 @@ export function DashboardSidebar({
                     {tentDetails?.tent_name}
                   </span>
                   <span className="text-xs">
-                    {tentDetails?.subscription_plan || "Enterprise Plan"}
+                    {userBranch?.branch_name || ""}
                   </span>
                 </div>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
+          </SidebarMenu> */}
+          <BranchSwitcher
+            tentDetails={tentDetails}
+            userBranch={userBranch}
+            branchesList={branchesList}
+          />
         </SidebarHeader>
 
         {/* Main Navigation */}

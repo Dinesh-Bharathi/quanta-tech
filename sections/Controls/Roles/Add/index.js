@@ -24,8 +24,14 @@ import { decryption, encryption } from "@/lib/encryption";
 import { toast } from "sonner";
 import Loading from "@/app/(dashboard)/loading";
 
+const roleScopeOptions = [
+  { label: "Global", value: "tenant" },
+  { label: "One Branch", value: "branch" },
+  { label: "Multi Branch", value: "multi-branch" },
+];
+
 const RolesAdd = ({ mode = "add", roleUuid }) => {
-  const { user, tentDetails } = useAuth();
+  const { user, tentDetails, branchesList } = useAuth();
   const router = useRouter();
   const [loadingData, setLoadingData] = useState(mode === "edit");
   const [roleData, setRoleData] = useState({});
@@ -91,6 +97,10 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
         .string()
         .min(2, "Description must be at least 2 characters")
         .max(500, "Description must be less than 500 characters"),
+      scope: z.enum(["tenant", "branch", "multi-branch"], {
+        required_error: "Scope is required",
+      }),
+      branch_uuid: z.array(z.string()).default([]),
     });
   };
 
@@ -99,6 +109,8 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
     defaultValues: {
       roleName: "",
       description: "",
+      scope: "tenant",
+      branch_uuid: [],
     },
   });
 
@@ -108,6 +120,8 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       form.reset({
         roleName: roleData.roleName || "",
         description: roleData.description || "",
+        scope: roleData.scope || "tenant",
+        branch_uuid: roleData.branch_uuid || [],
       });
     }
   }, [mode, roleData, form]);
@@ -509,6 +523,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
     try {
       const payload = {
         ...data,
+        tentUuid: tentDetails?.tent_uuid,
         permissions: menuPermissions,
       };
 
@@ -645,7 +660,11 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <RoleFormHeader form={form} />
+          <RoleFormHeader
+            form={form}
+            branchesList={branchesList}
+            roleScopeOptions={roleScopeOptions}
+          />
 
           <Card className="border-0 shadow-sm">
             <CardHeader>

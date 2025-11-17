@@ -6,7 +6,7 @@ import AuthApi from "@/services/auth/api";
 import { decryption } from "@/lib/encryption";
 
 export function useNavigation() {
-  const { user } = useAuth();
+  const { user, userBranch } = useAuth();
   const [mainNavigation, setMainNavigation] = useState([]);
   const [footerNavigation, setFooterNavigation] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,10 @@ export function useNavigation() {
     const fetchMenus = async () => {
       try {
         setLoading(true);
-        const response = await AuthApi.getUserNavMenus(user?.user_uuid);
+        const response = await AuthApi.getUserNavMenus(
+          user?.user_uuid,
+          userBranch?.branch_uuid
+        );
         const data = decryption(response.data?.data);
 
         if (data.success) {

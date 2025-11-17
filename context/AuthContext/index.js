@@ -19,6 +19,8 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [tentDetails, setTentDetails] = useState(null);
+  const [userBranch, setUserBranch] = useState(null);
+  const [branchesList, setBranchesList] = useState([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -60,10 +62,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await AuthApi.getSession();
       const data = decryption(response.data?.data);
-
       if (data) {
         setUser(data.data.user || null);
         setTentDetails(data.data.tenant || null);
+        setUserBranch(data.data.branches?.[0] || null);
+        setBranchesList(data.data.branches || null);
         setIsAuthenticated(true);
         const currentPath = window.location.pathname;
         if (PUBLIC_ROUTES.includes(currentPath)) {
@@ -100,6 +103,8 @@ export const AuthProvider = ({ children }) => {
       await AuthApi.logoutUser();
       setUser(null);
       setTentDetails(null);
+      setUserBranch(null);
+      setBranchesList([]);
       setIsAuthenticated(false);
       toast.success("Logout successful", { id: toastId });
     } catch (err) {
@@ -123,6 +128,10 @@ export const AuthProvider = ({ children }) => {
         setUser,
         tentDetails,
         setTentDetails,
+        userBranch,
+        setUserBranch,
+        branchesList,
+        setBranchesList,
         isAuthenticated,
         loading,
         login,

@@ -172,10 +172,19 @@ const Roles = () => {
       accessorKey: "created_at",
       headerName: "Created On",
       header: "Created On",
+      header: ({ column }) => (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Created On
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      ),
       cell: ({ row }) => {
         const date = new Date(row.getValue("created_at"));
         return (
-          <div className="text-sm text-muted-foreground">
+          <div className="text-sm text-muted-foreground px-4">
             {date.toLocaleDateString()}
           </div>
         );

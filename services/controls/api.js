@@ -51,12 +51,12 @@ export default {
   },
 
   // Users
-  getTenantUsers: async (tentUuid) => {
+  getTenantUsers: async (tentUuid, params) => {
     const endpoint = API_ENDPOINTS.GET_TENANT_USERS.replace(
       ":tentUuid",
       tentUuid
     );
-    return await axiosInstance.get(endpoint);
+    return await axiosInstance.get(endpoint, { params });
   },
 
   createTenantUser: async (tentUuid, data) => {
@@ -80,6 +80,44 @@ export default {
       ":userUuid",
       userUuid
     );
+    return await axiosInstance.delete(endpoint);
+  },
+
+  // Branches
+  getTenantBranches: async (tentUuid) => {
+    const endpoint = API_ENDPOINTS.GET_TENANT_BRANCHES.replace(
+      ":tentUuid",
+      tentUuid
+    );
+    return await axiosInstance.get(endpoint);
+  },
+  createTenantBranch: async (tentUuid, data) => {
+    const endpoint = API_ENDPOINTS.CREATE_TENANT_BRANCH.replace(
+      ":tentUuid",
+      tentUuid
+    );
+    return await axiosInstance.post(endpoint, data);
+  },
+  updateTenantBranch: async (tentUuid, branchUuid, data) => {
+    // const endpoint = `/branches/${tentUuid}/${branchUuid}`;
+    const endpoint = API_ENDPOINTS.UPDATE_TENANT_BRANCH.replace(
+      ":tentUuid",
+      tentUuid
+    ).replace(":branchUuid", branchUuid);
+    return await axiosInstance.put(endpoint, data);
+  },
+  getTenantBranchById: async (tentUuid, branchUuid) => {
+    const endpoint = API_ENDPOINTS.UPDATE_TENANT_BRANCH.replace(
+      ":tentUuid",
+      tentUuid
+    ).replace(":branchUuid", branchUuid);
+    return await axiosInstance.get(endpoint);
+  },
+  deleteTenantBranch: async (tentUuid, branchUuid) => {
+    const endpoint = API_ENDPOINTS.DELETE_TENANT_BRANCH.replace(
+      ":tentUuid",
+      tentUuid
+    ).replace(":branchUuid", branchUuid);
     return await axiosInstance.delete(endpoint);
   },
 };

@@ -1,21 +1,12 @@
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/context/AuthContext";
+import { ArrowUpDown, Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect, useState } from "react";
+import ControlsApi from "@/services/controls/api";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ArrowUpDown,
-  Edit,
-  MoreHorizontal,
-  Plus,
-  Trash2,
-  UserIcon,
-  Mail,
-  Phone,
-  ShieldCheck,
-} from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,169 +15,172 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/context/AuthContext";
-import { useConfirmation } from "@/context/ConfirmationContext";
-import ControlsApi from "@/services/controls/api";
-import { decryption } from "@/lib/encryption";
 import DataTable from "@/components/DataTable";
+import { Badge } from "@/components/ui/badge";
+import { useConfirmation } from "@/context/ConfirmationContext";
 import { toast } from "sonner";
 
-const Users = () => {
+export const Branches = () => {
   const router = useRouter();
-  const { tentDetails, userBranch } = useAuth();
+  const { tentDetails } = useAuth();
   const { showConfirmation } = useConfirmation();
 
   const [loading, setLoading] = useState(true);
   const [dataTableLoading, setDataTableLoading] = useState(true);
-  const [usersList, setUsersList] = useState([]);
-  const [filteredUsersList, setFilteredUsersList] = useState([]);
+  const [branchesList, setBranchesList] = useState([]);
+  const [filterBranchesList, setFilterBranchesList] = useState([]);
 
-  // 🔹 Search filter handler
+  useEffect(() => {
+    if (branchesList.length > 0) {
+      setFilterBranchesList(branchesList);
+    }
+  }, [branchesList]);
+
   const onDataTableSearch = useCallback(
     (searchValue) => {
       if (!searchValue || searchValue.trim() === "") {
-        setFilteredUsersList(usersList);
+        // If search is empty, show all roles
+        setFilterBranchesList(branchesList);
         return;
       }
 
       const lowerSearchValue = searchValue.toLowerCase();
-      const filtered = usersList.filter((user) => {
-        const searchableKeys = ["user_name", "user_email", "user_phone"];
+
+      const filtered = branchesList.filter((branch) => {
+        // Define which keys to search in
+        const searchableKeys = [
+          "branch_name",
+          "phone",
+          "address1",
+          "postal_code",
+        ];
+
+        // Check if search value matches any of the searchable keys
         return searchableKeys.some((key) => {
-          const fieldValue = user[key];
-          if (!fieldValue) return false;
+          const fieldValue = branch[key];
+          if (fieldValue === null || fieldValue === undefined) {
+            return false;
+          }
           return fieldValue.toString().toLowerCase().includes(lowerSearchValue);
         });
       });
 
-      setFilteredUsersList(filtered);
+      setFilterBranchesList(filtered);
     },
-    [usersList]
+    [branchesList]
   );
 
-  // 🔹 Fetch Users API
-  const getTenantUsers = useCallback(async () => {
-    if (!usersList.length > 0) setLoading(true);
+  const getBranchesList = useCallback(async () => {
+    if (!branchesList.length > 0) {
+      setLoading(true);
+    }
     setDataTableLoading(true);
     try {
-      const response = await ControlsApi.getTenantUsers(
-        tentDetails?.tent_uuid,
-        { all: false, branchUuid: userBranch?.branch_uuid }
+      const response = await ControlsApi.getTenantBranches(
+        tentDetails?.tent_uuid
       );
-      // const decrypted = decryption(response?.data?.data);
-      // const data = decrypted?.data || [];
-      setUsersList(response?.data?.data);
-    } catch (err) {
-      console.error("Fetch users:", err);
-      toast.error("Failed to fetch users");
+      setBranchesList(response.data.data);
+      setFilterBranchesList(response.data.data);
+    } catch (error) {
+      console.error("Fetch branches:", error);
     } finally {
       setLoading(false);
       setDataTableLoading(false);
     }
-  }, [tentDetails?.tent_uuid, usersList.length]);
+  }, [branchesList.length, tentDetails?.tent_uuid]);
 
-  // 🔹 On mount
   useEffect(() => {
-    if (tentDetails?.tent_uuid) getTenantUsers();
-  }, [getTenantUsers, tentDetails?.tent_uuid]);
+    if (tentDetails?.tent_uuid) {
+      getBranchesList();
+    }
+  }, [getBranchesList, tentDetails?.tent_uuid]);
 
-  // 🔹 Sync filtered data
-  useEffect(() => {
-    if (usersList.length > 0) setFilteredUsersList(usersList);
-  }, [usersList]);
-
-  // 🔹 Delete user
-  const handleDeleteUser = async (user_uuid, user_name) => {
+  const handleDeleteBranch = async (branch_uuid, branch_name) => {
     await showConfirmation({
-      title: "Delete User",
-      message: `Are you sure you want to delete "${user_name}"? This action cannot be undone.`,
+      title: "Delete Branch",
+      message: `Are you sure you want to delete "${branch_name}"? This action cannot be undone.`,
       confirmText: "Delete",
       cancelText: "Cancel",
       isDangerous: true,
       onConfirm: async () => {
         try {
-          await ControlsApi.deleteTenantUser(user_uuid);
-          toast.success("User deleted successfully");
-          getTenantUsers();
+          await ControlsApi.deleteTenantBranch(
+            tentDetails?.tent_uuid,
+            branch_uuid
+          );
+          toast.success("Branch deleted successfully");
+          getBranchesList();
         } catch (err) {
-          console.error("Delete user error:", err);
-          toast.error("Failed to delete user");
+          console.error("Delete branch error:", err);
+          toast.error("Failed to delete branch");
         }
       },
     });
   };
 
-  // 🔹 DataTable columns
   const columns = [
     {
-      accessorKey: "user_name",
-      headerName: "Name",
+      accessorKey: "branch_name",
+      headerName: "Branch Name",
       header: ({ column }) => (
         <Button
           variant="ghost"
           onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         >
-          Name <ArrowUpDown className="ml-2 h-4 w-4" />
+          Branch Name
+          <ArrowUpDown className="ml-2 h-4 w-4" />
         </Button>
       ),
       cell: ({ row }) => {
-        const name = row.getValue("user_name");
-        const isOwner = row.original.is_owner;
+        const branch = row.original;
         return (
-          <div className="flex items-center gap-2">
-            <UserIcon className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">{name}</span>
-            {isOwner ? (
-              <Badge variant="secondary" className="text-xs">
-                Owner
+          <div className="flex items-center gap-2 font-medium">
+            {branch.branch_name}
+            {branch.is_hq && (
+              <Badge variant="success" className="text-xs px-2 py-0.5">
+                HQ
               </Badge>
-            ) : null}
+            )}
           </div>
         );
       },
     },
     {
-      accessorKey: "user_email",
-      headerName: "Email",
-      header: "Email",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Mail className="h-4 w-4" />
-          {row.getValue("user_email")}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "user_phone",
+      accessorKey: "phone",
       headerName: "Phone",
       header: "Phone",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Phone className="h-4 w-4" />
-          {row.getValue("user_phone") || "—"}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "role_name",
-      headerName: "Role",
-      header: "Role",
       cell: ({ row }) => {
-        const role = row.getValue("role_name");
+        const value = row.getValue("phone");
         return (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4" />
-            {role || "—"}
-          </div>
+          <span className="text-sm text-muted-foreground">{value || "—"}</span>
         );
       },
     },
-
+    {
+      accessorKey: "address1",
+      headerName: "Address",
+      header: "Address",
+      cell: ({ row }) => {
+        const value = row.getValue("address1");
+        return (
+          <span className="text-sm text-muted-foreground">{value || "—"}</span>
+        );
+      },
+    },
+    {
+      accessorKey: "postal_code",
+      headerName: "Postal Code",
+      header: "Postal Code",
+      cell: ({ row }) => {
+        const value = row.getValue("postal_code");
+        return (
+          <span className="text-sm text-muted-foreground">{value || "—"}</span>
+        );
+      },
+    },
     {
       accessorKey: "created_on",
       headerName: "Created On",
-      header: "Created On",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -199,9 +193,9 @@ const Users = () => {
       cell: ({ row }) => {
         const date = new Date(row.getValue("created_on"));
         return (
-          <div className="text-sm text-muted-foreground px-4">
+          <span className="text-sm text-muted-foreground px-4">
             {date.toLocaleDateString()}
-          </div>
+          </span>
         );
       },
     },
@@ -209,8 +203,8 @@ const Users = () => {
       id: "actions",
       headerName: "Actions",
       cell: ({ row }) => {
-        const user = row.original;
-        const isOwner = row.original.is_owner;
+        const branch = row.original;
+
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -219,29 +213,29 @@ const Users = () => {
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent align="end" className="bg-card border-border">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(user.user_uuid)}
-              >
-                Copy User ID
-              </DropdownMenuItem>
               <DropdownMenuSeparator />
+
               <DropdownMenuItem
                 onClick={() =>
-                  router.push(`/controls/users/edit/${user.user_uuid}`)
+                  router.push(`/controls/branches/edit/${branch.branch_uuid}`)
                 }
               >
                 <Edit className="mr-2 h-4 w-4" />
-                Edit User
+                Edit Branch
               </DropdownMenuItem>
+
               <DropdownMenuItem
                 className="text-destructive"
-                disabled={isOwner}
-                onClick={() => handleDeleteUser(user.user_uuid, user.user_name)}
+                disabled={branch.is_hq}
+                onClick={() =>
+                  handleDeleteBranch(branch.branch_uuid, branch.branch_name)
+                }
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                Delete User
+                Delete Branch
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -250,7 +244,6 @@ const Users = () => {
     },
   ];
 
-  // 🔹 Loading state (skeleton)
   if (loading) {
     return (
       <div className="flex-1 space-y-4">
@@ -279,39 +272,23 @@ const Users = () => {
     );
   }
 
-  // 🔹 Final render
   return (
     <div className="flex-1 space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Users</h2>
+          <h2 className="text-3xl font-bold tracking-tight">
+            Organisation Branches
+          </h2>
           <p className="text-muted-foreground">
-            Manage your team members with ease
+            Create and manage all branches within your organisation.
           </p>
         </div>
-        <Button onClick={() => router.push("/controls/users/add")}>
+        <Button onClick={() => router.push("/controls/branches/add")}>
           <Plus className="mr-2 h-4 w-4" />
-          Add User
+          Add Branch
         </Button>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card border-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <UserIcon className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{usersList.length}</div>
-            <p className="text-xs text-muted-foreground">
-              {usersList.length > 1 ? "+2 from last month" : "No change"}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Table */}
       {dataTableLoading ? (
         <Card>
           <CardHeader>
@@ -336,14 +313,12 @@ const Users = () => {
       ) : (
         <DataTable
           columns={columns}
-          rows={filteredUsersList}
+          rows={filterBranchesList}
           onDataTableSearch={onDataTableSearch}
-          searchplaceholder={"Search users..."}
-          filterColumns={["role_name"]}
+          searchplaceholder={"Search branch..."}
+          // filterColumns={["is_active"]}
         />
       )}
     </div>
   );
 };
-
-export default Users;
