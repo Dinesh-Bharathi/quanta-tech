@@ -29,4 +29,8 @@ export default {
    resendVerificationEmail: async (payload) => {
     return await axiosInstance.post(API_ENDPOINTS.RESEND_VERIFICATION_EMAIL, payload);
   },
+   registerTenant: async (userUuid, payload) => {
+    const endpoint = API_ENDPOINTS.ONBOARDING_REGISTER.replace(":userUuid", userUuid);
+    return await axiosInstance.post(endpoint, payload);
+  },
 };

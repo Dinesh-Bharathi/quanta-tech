@@ -6,8 +6,8 @@ export const API_ENDPOINTS = {
   GOOGLE_SIGNUP: "/auth/google/signup",
   SIGNUP: "/auth/signup",
   SEND_VERIFICATION_EMAIL: "/auth/send-verification",
-  RESEND_VERIFICATION_EMAIL:"/auth/resend-verification",
-
+  RESEND_VERIFICATION_EMAIL: "/auth/resend-verification",
+  ONBOARDING_REGISTER: "/auth/register-tenant/:userUuid",
 
   // Controls > User Menus
   USER_NAV_MENUS: "/controls/menu/:userUuid",

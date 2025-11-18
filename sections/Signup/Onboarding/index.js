@@ -14,19 +14,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import AuthApi from "@/services/auth/api";
+import { toast } from "sonner";
 
-
+// ✅ Updated Schema (removed required for description, email, contact)
 const orgSchema = z.object({
   organizationName: z.string().min(2, "Organization name is required"),
   registrationNumber: z.string().min(2, "Registration number is required"),
-  description: z.string().min(10, "Description must be at least 10 characters"),
-  email: z.string().email("Invalid email address"),
-  contact: z.string().min(10, "Contact number must be at least 10 digits"),
+  description: z.string().optional(),
+  email: z.string().optional(),
+  contact: z.string().optional(),
 });
 
 const Onboarding = () => {
-
   const {
     register,
     handleSubmit,
@@ -35,11 +36,35 @@ const Onboarding = () => {
     resolver: zodResolver(orgSchema),
   });
 
-  const router = useRouter()
+  const searchParams = useSearchParams();
 
-  const onSubmit = (data) => {
-    console.log("Organization Info Submitted:", data);
-    router.push('/signup/plans')
+  const onSubmit = async (data) => {
+    const userUuid = searchParams.get("user_uuid");
+
+    const payload = {
+      tent_name: data.organizationName,
+      tent_phone: data.contact || "",
+      tent_email: data.email || "",
+    };
+
+    try {
+      const res = await AuthApi.registerTenant(userUuid, payload);
+
+      // If backend returns success === false
+      if (res.data?.success === false) {
+        toast.error(res.data.message || "Something went wrong");
+        return;
+      }
+
+      toast.success(res.data?.message || "Tenant registered successfully!");
+      // router.push("/signup/plans");
+    } catch (err) {
+      console.log("API Error:", err);
+
+      const backendMsg = err?.response?.data?.message || "Something went wrong";
+
+      toast.error(backendMsg);
+    }
   };
 
   return (
@@ -87,52 +112,26 @@ const Onboarding = () => {
               </div>
             </div>
 
-            {/* Description */}
+            {/* Description (optional) */}
             <div>
-              <Label htmlFor="description">Description *</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 placeholder="Tell us about your organization"
                 {...register("description")}
-                className={errors.description ? "border-red-500" : ""}
               />
-              {errors.description && (
-                <p className="text-sm text-red-500 mt-1">
-                  {errors.description.message}
-                </p>
-              )}
             </div>
 
-            {/* Email + Contact */}
+            {/* Email + Contact (optional) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...register("email")}
-                  
-                  className={errors.email ? "border-red-500" : ""}
-                />
-                {errors.email && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.email.message}
-                  </p>
-                )}
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" {...register("email")} />
               </div>
 
               <div>
-                <Label htmlFor="contact">Contact Number *</Label>
-                <Input
-                  id="contact"
-                  {...register("contact")}
-                  className={errors.contact ? "border-red-500" : ""}
-                />
-                {errors.contact && (
-                  <p className="text-sm text-red-500 mt-1">
-                    {errors.contact.message}
-                  </p>
-                )}
+                <Label htmlFor="contact">Contact Number</Label>
+                <Input id="contact" {...register("contact")} />
               </div>
             </div>
 
