@@ -203,21 +203,21 @@ export function GeneralSettings() {
       }
 
       const data = {
-        organizationName: successdata.data.tent_name || "",
-        description: successdata.data.tent_description || "",
-        email: successdata.data.tent_email || "",
-        contact: successdata.data.tent_phone || "",
-        registrationNumber: successdata.data.tent_gst_no || "",
-        streetAddress: successdata.data.tent_address1 || "",
-        city: successdata.data.tent_address2 || "",
-        state: successdata.data.tent_state || "",
-        country: successdata.data.tent_country || "",
-        pincode: successdata.data.tent_postalcode || "",
-        website: successdata.data.tent_web || "",
-        facebook: successdata.data.tent_facebook || "",
-        instagram: successdata.data.tent_insta || "",
-        youtube: successdata.data.tent_youtube || "",
-        x: successdata.data.tent_twitter || "",
+        organizationName: successdata.tent_name || "",
+        description: successdata.tent_description || "",
+        email: successdata.tent_email || "",
+        contact: successdata.tent_phone || "",
+        registrationNumber: successdata.tent_gst_no || "",
+        streetAddress: successdata.tent_address1 || "",
+        city: successdata.tent_address2 || "",
+        state: successdata.tent_state || "",
+        country: successdata.tent_country || "",
+        pincode: successdata.tent_postalcode || "",
+        website: successdata.tent_web || "",
+        facebook: successdata.tent_facebook || "",
+        instagram: successdata.tent_insta || "",
+        youtube: successdata.tent_youtube || "",
+        x: successdata.tent_twitter || "",
       };
 
       setOrganizationData(data);

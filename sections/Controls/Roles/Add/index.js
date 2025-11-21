@@ -41,6 +41,8 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
   const [menuPermissions, setMenuPermissions] = useState({});
   const [openAccordions, setOpenAccordions] = useState([]);
 
+  console.log("roleData", roleData);
+
   useEffect(() => {
     const fetchSubscribedMenus = async () => {
       setLoadingMenus(true);
@@ -530,9 +532,12 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       const body = encryption(payload);
 
       if (mode === "edit") {
-        const res = await ControlsApi.updateTenantRole(roleUuid, {
-          data: body,
-        });
+        const res = await ControlsApi.updateTenantRole(
+          roleData?.role_group_uuid,
+          {
+            data: body,
+          }
+        );
 
         const decryptRes = decryption(res.data.data);
 

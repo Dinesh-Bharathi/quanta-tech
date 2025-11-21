@@ -41,13 +41,12 @@ export default {
     );
     return await axiosInstance.put(endpoint, data);
   },
-  deleteTenantRole: async (roleUuid) => {
+  deleteTenantRole: async (tentUuid, roleUuid) => {
     const endpoint = API_ENDPOINTS.DELETE_TENANT_ROLE.replace(
-      ":roleUuid",
-      roleUuid
-    );
-
-    return axiosInstance.delete(endpoint, {});
+      ":tentUuid",
+      tentUuid
+    ).replace(":roleUuid", roleUuid);
+    return axiosInstance.delete(endpoint);
   },
 
   // Users

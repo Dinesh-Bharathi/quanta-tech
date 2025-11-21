@@ -4,6 +4,10 @@ export const API_ENDPOINTS = {
   LOGOUT: "/auth/logout",
   GOOGLE_LOGIN: "/auth/google/login",
   GOOGLE_SIGNUP: "/auth/google/signup",
+  SIGNUP: "/auth/signup",
+  SEND_VERIFICATION_EMAIL: "/auth/send-verification",
+  RESEND_VERIFICATION_EMAIL: "/auth/resend-verification",
+  ONBOARDING_REGISTER: "/auth/register-tenant/:userUuid",
 
   // Controls > User Menus
   USER_NAV_MENUS: "/controls/menu/:userUuid/:branchUuid",
@@ -13,7 +17,7 @@ export const API_ENDPOINTS = {
   ADD_TENANT_ROLE: "/controls/tenant/roles/:tentUuid",
   GET_TENANT_ROLE_BY_UUID: "/controls/tenant/role/details/:roleUuid",
   UPDATE_TENANT_ROLE: "/controls/tenant/role/:roleUuid",
-  DELETE_TENANT_ROLE: "/controls/tenant/role/:roleUuid",
+  DELETE_TENANT_ROLE: "/controls/tenant/role/:tentUuid/:roleUuid",
   // Controls > Users
   GET_TENANT_USERS: "/controls/tenant/users/:tentUuid",
   CREATE_TENANT_USER: "/controls/tenant/users/:tentUuid",
@@ -37,6 +41,8 @@ export const PUBLIC_ROUTES = [
   "/",
   "/login",
   "/signup",
+  "/signup/onboarding",
+  "/singnup/plans",
   "/forgot-password",
   "/reset-password",
 ];

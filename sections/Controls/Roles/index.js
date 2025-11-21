@@ -38,6 +38,8 @@ const Roles = () => {
   const [rolesList, setRolesList] = useState([]);
   const [filteredRolesList, setFilteredRolesList] = useState([]);
 
+  console.log("rolesList", rolesList);
+
   const onDataTableSearch = useCallback(
     (searchValue) => {
       if (!searchValue || searchValue.trim() === "") {
@@ -96,7 +98,7 @@ const Roles = () => {
     if (tentDetails?.tent_uuid) getTenantRoles();
   }, [getTenantRoles, tentDetails?.tent_uuid]);
 
-  const handleDeleteRole = async (role_uuid, roleName) => {
+  const handleDeleteRole = async (role_group_uuid, roleName) => {
     const confirmed = await showConfirmation({
       title: "Delete Role",
       message: `Are you sure you want to delete the role "${roleName}"? This action cannot be undone.`,
@@ -105,12 +107,20 @@ const Roles = () => {
       isDangerous: true,
       onConfirm: async () => {
         try {
-          await ControlsApi.deleteTenantRole(role_uuid);
-          toast.success("Role deleted successfully!", { id: role_uuid });
+          const repsponse = await ControlsApi.deleteTenantRole(
+            tentDetails?.tent_uuid,
+            role_group_uuid
+          );
+          const decryptRes = decryption(repsponse.data.data);
+          toast.success(decryptRes?.message || "Role deleted successfully!", {
+            id: role_group_uuid,
+          });
           getTenantRoles();
-          // setRolesList(rolesList.filter(role => role.role_uuid !== role_uuid));
         } catch (err) {
-          toast.error("Please try again!", { id: role_uuid });
+          const error = decryption(err, "error");
+          toast.error(error?.message || "Please try again!", {
+            id: role_group_uuid,
+          });
           console.error("Delete role error:", err);
         }
       },
@@ -223,7 +233,9 @@ const Roles = () => {
               <DropdownMenuItem
                 className="text-destructive"
                 disabled={isSystemRole}
-                onClick={() => handleDeleteRole(role.role_uuid, role.role_name)}
+                onClick={() =>
+                  handleDeleteRole(role.role_group_uuid, role.role_name)
+                }
               >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete role
