@@ -6,63 +6,71 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import AuthApi from "@/services/auth/api";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
-// ✅ Updated Schema (removed required for description, email, contact)
 const orgSchema = z.object({
   organizationName: z.string().min(2, "Organization name is required"),
-  registrationNumber: z.string().min(2, "Registration number is required"),
-  description: z.string().optional(),
-  email: z.string().optional(),
-  contact: z.string().optional(),
+  registrationNumber: z.string().min(2, "Register / GST No is required"),
+  address1: z.string().min(2, "Address line 1 is required"),
+  address2: z.string().optional(),
+  state: z.string().min(1, "State is required"),
+  country: z.string().min(1, "Country is required"),
 });
 
 const Onboarding = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
   } = useForm({
     resolver: zodResolver(orgSchema),
   });
-
-  const searchParams = useSearchParams();
 
   const onSubmit = async (data) => {
     const userUuid = searchParams.get("user_uuid");
 
     const payload = {
       tent_name: data.organizationName,
-      tent_phone: data.contact || "",
-      tent_email: data.email || "",
+      registration_number: data.registrationNumber,
+      address1: data.address1,
+      address2: data.address2 || "",
+      state: data.state,
+      country: data.country,
     };
 
     try {
       const res = await AuthApi.registerTenant(userUuid, payload);
 
-      // If backend returns success === false
       if (res.data?.success === false) {
         toast.error(res.data.message || "Something went wrong");
         return;
       }
 
-      toast.success(res.data?.message || "Tenant registered successfully!");
+      toast.success(
+        res.data?.message || "Organization registered successfully!"
+      );
       router.push("/login");
     } catch (err) {
       console.log("API Error:", err);
-
       const backendMsg = err?.response?.data?.message || "Something went wrong";
-
       toast.error(backendMsg);
     }
   };
@@ -71,73 +79,108 @@ const Onboarding = () => {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-3xl shadow-lg">
         <CardHeader>
-          <CardTitle>Organization Information</CardTitle>
-          <CardDescription>
-            Update your organization&apos;s basic information
-          </CardDescription>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <h1 className="text-3xl font-semibold leading-tight">
+                Let's Setup Your Organization
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Provide your business details so we can personalize your workspace.
+              </p>
+            </div>
+          </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* Org Name + Registration */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="organizationName">Organization Name *</Label>
+                <Label>Organization Name *</Label>
                 <Input
-                  id="organizationName"
                   {...register("organizationName")}
                   className={errors.organizationName ? "border-red-500" : ""}
                 />
                 {errors.organizationName && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-red-500">
                     {errors.organizationName.message}
                   </p>
                 )}
               </div>
 
               <div>
-                <Label htmlFor="registrationNumber">
-                  Registration Number *
-                </Label>
+                <Label>Register No / GST Number *</Label>
                 <Input
-                  id="registrationNumber"
                   {...register("registrationNumber")}
                   className={errors.registrationNumber ? "border-red-500" : ""}
                 />
                 {errors.registrationNumber && (
-                  <p className="text-sm text-red-500 mt-1">
+                  <p className="text-sm text-red-500">
                     {errors.registrationNumber.message}
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Description (optional) */}
             <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Tell us about your organization"
-                {...register("description")}
+              <Label>Address Line 1 *</Label>
+              <Input
+                {...register("address1")}
+                className={errors.address1 ? "border-red-500" : ""}
               />
+              {errors.address1 && (
+                <p className="text-sm text-red-500">
+                  {errors.address1.message}
+                </p>
+              )}
             </div>
 
-            {/* Email + Contact (optional) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label>Address Line 2</Label>
+              <Input {...register("address2")} />
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" {...register("email")} />
+                <Label>State *</Label>
+                <Select onValueChange={(val) => setValue("state", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select state" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                    <SelectItem value="Karnataka">Karnataka</SelectItem>
+                    <SelectItem value="Kerala">Kerala</SelectItem>
+                    <SelectItem value="Telangana">Telangana</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.state && (
+                  <p className="text-sm text-red-500">{errors.state.message}</p>
+                )}
               </div>
 
               <div>
-                <Label htmlFor="contact">Contact Number</Label>
-                <Input id="contact" {...register("contact")} />
+                <Label>Country *</Label>
+                <Select onValueChange={(val) => setValue("country", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="India">India</SelectItem>
+                    <SelectItem value="USA">USA</SelectItem>
+                    <SelectItem value="Canada">Canada</SelectItem>
+                    <SelectItem value="UK">UK</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.country && (
+                  <p className="text-sm text-red-500">
+                    {errors.country.message}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* Buttons */}
-            <div className="flex justify-end gap-3">
-              <Button type="submit">Save</Button>
+            <div className="flex justify-end">
+              <Button type="submit">Continue</Button>
             </div>
           </form>
         </CardContent>
