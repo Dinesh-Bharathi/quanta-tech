@@ -3,11 +3,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,11 +45,11 @@ const Onboarding = () => {
 
     const payload = {
       tent_name: data.organizationName,
-      registration_number: data.registrationNumber,
-      address1: data.address1,
-      address2: data.address2 || "",
-      state: data.state,
-      country: data.country,
+      tent_registration_number: data.registrationNumber,
+      tent_address1: data.address1,
+      tent_address2: data.address2 || "",
+      tent_state: data.state,
+      tent_country: data.country,
     };
 
     try {
@@ -82,10 +78,11 @@ const Onboarding = () => {
           <div className="space-y-4">
             <div className="space-y-2">
               <h1 className="text-3xl font-semibold leading-tight">
-                Let's Setup Your Organization
+                Let&apos;s Setup Your Organization
               </h1>
               <p className="text-sm text-muted-foreground">
-                Provide your business details so we can personalize your workspace.
+                Provide your business details so we can personalize your
+                workspace.
               </p>
             </div>
           </div>

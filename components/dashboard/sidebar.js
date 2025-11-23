@@ -65,10 +65,7 @@ const isRouteActive = (itemUrl, currentPath) => {
 };
 
 export function DashboardSidebar({
-  tentDetails,
   user,
-  userBranch,
-  branchesList,
   isOffcanvas = false,
   isStatic = false,
   isCollapseOffcanvas = false,
@@ -78,7 +75,7 @@ export function DashboardSidebar({
   const { layoutConfig } = useThemeCustomization();
   const { mainNavigation, footerNavigation, loading } = useNavigation();
   const [expandedItems, setExpandedItems] = useState(new Set());
-  const { setOpenMobile, isMobile } = useSidebar();
+  const { setOpenMobile, isMobile, open } = useSidebar();
 
   const toggleExpanded = (title) => {
     const newExpanded = new Set(expandedItems);
@@ -146,31 +143,7 @@ export function DashboardSidebar({
       >
         {/* Header */}
         <SidebarHeader>
-          {/* <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                size="lg"
-                className="data-[slot=sidebar-menu-button]:!p-1.5 rounded-lg"
-              >
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Building2 className="size-4" />
-                </div>
-                <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-semibold">
-                    {tentDetails?.tent_name}
-                  </span>
-                  <span className="text-xs">
-                    {userBranch?.branch_name || ""}
-                  </span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu> */}
-          <BranchSwitcher
-            tentDetails={tentDetails}
-            userBranch={userBranch}
-            branchesList={branchesList}
-          />
+          <BranchSwitcher sidebarOpen={open} />
         </SidebarHeader>
 
         {/* Main Navigation */}

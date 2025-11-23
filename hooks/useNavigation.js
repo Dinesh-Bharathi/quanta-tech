@@ -1,46 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AuthApi from "@/services/auth/api";
 import { decryption } from "@/lib/encryption";
 
 export function useNavigation() {
-  const { user, userBranch } = useAuth();
+  const { user, currentBranch } = useAuth();
   const [mainNavigation, setMainNavigation] = useState([]);
   const [footerNavigation, setFooterNavigation] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!user?.user_uuid) {
+  const fetchMenus = useCallback(async () => {
+    // Prevent fetch when either user or branch is missing
+    if (!user?.user_uuid || !currentBranch?.branch_uuid) {
+      setMainNavigation([]);
+      setFooterNavigation([]);
       setLoading(false);
       return;
     }
 
-    const fetchMenus = async () => {
-      try {
-        setLoading(true);
-        const response = await AuthApi.getUserNavMenus(
-          user?.user_uuid,
-          userBranch?.branch_uuid
-        );
-        const data = decryption(response.data?.data);
+    try {
+      setLoading(true);
+      setError(null);
 
-        if (data.success) {
-          setMainNavigation(data.mainNavigation || []);
-          setFooterNavigation(data.footerNavigation || []);
-        }
-      } catch (err) {
-        console.error("Menu fetch error:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      const response = await AuthApi.getUserNavMenus(
+        user.user_uuid,
+        currentBranch.branch_uuid
+      );
+
+      const data = decryption(response.data?.data);
+
+      if (data?.success) {
+        setMainNavigation(data.data?.mainNavigation || []);
+        setFooterNavigation(data.data?.footerNavigation || []);
+      } else {
+        setMainNavigation([]);
+        setFooterNavigation([]);
       }
-    };
+    } catch (err) {
+      console.error("Menu fetch error:", err);
+      setError(err.message || "Failed to load menus");
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.user_uuid, currentBranch?.branch_uuid]);
 
+  // Trigger fetch whenever user or branch changes
+  useEffect(() => {
     fetchMenus();
-  }, [user?.user_uuid]);
+  }, [fetchMenus]);
 
   return {
     mainNavigation,

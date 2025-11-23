@@ -1,7 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Building2, ChevronsUpDown, Plus } from "lucide-react";
+import { Building2, ChevronsUpDown, Plus, Check } from "lucide-react";
+
+import { useAuth } from "@/context/AuthContext";
 
 import {
   DropdownMenu,
@@ -12,21 +14,61 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Badge } from "@/components/ui/badge";
 
-export function BranchSwitcher({ tentDetails, userBranch, branchesList }) {
+export function BranchSwitcher({ sidebarOpen }) {
+  const {
+    currentBranch,
+    branchesList,
+    switchBranch,
+    permissions,
+    canAccessBranch,
+  } = useAuth();
+
   const { isMobile } = useSidebar();
-  const [activeTeam, setActiveTeam] = React.useState(userBranch || {});
 
-  if (!activeTeam || branchesList.length === 0) {
-    return null;
+  // Validate branch list
+  if (!branchesList || branchesList.length === 0) return null;
+
+  const accessibleBranches = branchesList.filter((branch) =>
+    canAccessBranch(branch.branch_uuid)
+  );
+
+  // Static view when only one accessible branch
+  if (accessibleBranches.length === 1) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            size="lg"
+            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+          >
+            <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <Building2 className="size-4" />
+            </div>
+
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-medium">
+                {currentBranch?.branch_name || "Select Branch"}
+              </span>
+              {/* {currentBranch?.is_hq && (
+                  <span className="truncate text-xs">(HQ)</span>
+                )} */}
+            </div>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
   }
 
+  // Full dropdown (match original UI)
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -37,43 +79,75 @@ export function BranchSwitcher({ tentDetails, userBranch, branchesList }) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                {/* <activeTeam.logo className="size-4" /> */}
                 <Building2 className="size-4" />
               </div>
+
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">
-                  {tentDetails.tent_name}
+                  {currentBranch?.branch_name || "Select Branch"}
                 </span>
-                <span className="truncate text-xs">
-                  {activeTeam.branch_name}
-                </span>
+                {/* {currentBranch?.is_hq && (
+                  <span className="truncate text-xs">(HQ)</span>
+                )} */}
               </div>
+
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
+
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
+            <DropdownMenuLabel className="text-muted-foreground text-xs flex items-center justify-between">
               Branches
+              {/* {permissions?.has_tenant_wide_access && (
+                <Badge variant="secondary" className="text-xs">
+                  All Access
+                </Badge>
+              )} */}
             </DropdownMenuLabel>
-            {branchesList.map((branch, index) => (
+
+            {accessibleBranches.map((branch, index) => (
               <DropdownMenuItem
-                key={branch.branch_name}
-                onClick={() => setActiveTeam(branch)}
-                className="gap-2 p-2"
+                key={branch.branch_uuid}
+                onClick={() => switchBranch(branch.branch_uuid)}
+                className="gap-2 p-2 flex items-center justify-between cursor-pointer"
               >
-                <div className="flex size-6 items-center justify-center rounded-md border">
-                  <Building2 className="size-3.5 shrink-0" />
+                <div className="flex items-center gap-2">
+                  <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+                    <Building2 className="size-4" />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <span className="font-medium">{branch.branch_name}</span>
+
+                    {branch.state && (
+                      <span className="text-xs text-muted-foreground">
+                        {branch.state}, {branch.country}
+                      </span>
+                    )}
+
+                    {/* {branch.is_hq && (
+                      <Badge variant="outline" className="text-xs w-fit">
+                        HQ
+                      </Badge>
+                    )} */}
+                  </div>
                 </div>
-                {branch.branch_name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+
+                {currentBranch?.branch_uuid === branch.branch_uuid && (
+                  <Check className="size-4 text-primary" />
+                )}
+
+                {/* <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut> */}
               </DropdownMenuItem>
             ))}
+
             <DropdownMenuSeparator />
+
             <DropdownMenuItem className="gap-2 p-2">
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
@@ -82,6 +156,13 @@ export function BranchSwitcher({ tentDetails, userBranch, branchesList }) {
                 Add branch
               </div>
             </DropdownMenuItem>
+
+            {/* <DropdownMenuSeparator />
+
+            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+              {accessibleBranches.length} of {branchesList.length} branches
+              accessible
+            </div> */}
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

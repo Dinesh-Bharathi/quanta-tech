@@ -15,6 +15,7 @@ import {
   Mail,
   Phone,
   ShieldCheck,
+  Building2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuth } from "@/context/AuthContext";
 import { useConfirmation } from "@/context/ConfirmationContext";
 import ControlsApi from "@/services/controls/api";
@@ -34,7 +41,7 @@ import { toast } from "sonner";
 
 const Users = () => {
   const router = useRouter();
-  const { tentDetails, userBranch } = useAuth();
+  const { tentDetails, currentBranch } = useAuth();
   const { showConfirmation } = useConfirmation();
 
   const [loading, setLoading] = useState(true);
@@ -42,7 +49,7 @@ const Users = () => {
   const [usersList, setUsersList] = useState([]);
   const [filteredUsersList, setFilteredUsersList] = useState([]);
 
-  // 🔹 Search filter handler
+  // 🔹 Search filter handler (updated to search in roles array)
   const onDataTableSearch = useCallback(
     (searchValue) => {
       if (!searchValue || searchValue.trim() === "") {
@@ -52,12 +59,22 @@ const Users = () => {
 
       const lowerSearchValue = searchValue.toLowerCase();
       const filtered = usersList.filter((user) => {
-        const searchableKeys = ["user_name", "user_email", "user_phone"];
-        return searchableKeys.some((key) => {
+        // Search in basic fields
+        const basicFields = ["user_name", "user_email", "user_phone"];
+        const basicMatch = basicFields.some((key) => {
           const fieldValue = user[key];
           if (!fieldValue) return false;
           return fieldValue.toString().toLowerCase().includes(lowerSearchValue);
         });
+
+        // Search in roles array
+        const rolesMatch = user.roles?.some(
+          (role) =>
+            role.role_name?.toLowerCase().includes(lowerSearchValue) ||
+            role.branch?.branch_name?.toLowerCase().includes(lowerSearchValue)
+        );
+
+        return basicMatch || rolesMatch;
       });
 
       setFilteredUsersList(filtered);
@@ -72,11 +89,9 @@ const Users = () => {
     try {
       const response = await ControlsApi.getTenantUsers(
         tentDetails?.tent_uuid,
-        { all: false, branchUuid: userBranch?.branch_uuid }
+        { all: false, branchUuid: currentBranch?.branch_uuid }
       );
-      // const decrypted = decryption(response?.data?.data);
-      // const data = decrypted?.data || [];
-      setUsersList(response?.data?.data);
+      setUsersList(response?.data?.data || []);
     } catch (err) {
       console.error("Fetch users:", err);
       toast.error("Failed to fetch users");
@@ -84,12 +99,12 @@ const Users = () => {
       setLoading(false);
       setDataTableLoading(false);
     }
-  }, [tentDetails?.tent_uuid, usersList.length]);
+  }, [tentDetails?.tent_uuid, currentBranch?.branch_uuid]);
 
   // 🔹 On mount
   useEffect(() => {
     if (tentDetails?.tent_uuid) getTenantUsers();
-  }, [getTenantUsers, tentDetails?.tent_uuid]);
+  }, [tentDetails?.tent_uuid, getTenantUsers]);
 
   // 🔹 Sync filtered data
   useEffect(() => {
@@ -117,6 +132,42 @@ const Users = () => {
     });
   };
 
+  // 🔹 Helper: Get unique role names for filtering
+  const getUniqueRoleNames = () => {
+    const roleNames = new Set();
+    usersList.forEach((user) => {
+      user.roles?.forEach((role) => {
+        if (role.role_name) roleNames.add(role.role_name);
+      });
+    });
+    return Array.from(roleNames);
+  };
+
+  // 🔹 Helper: Get unique branch names for filtering
+  const getUniqueBranchNames = () => {
+    const branchNames = new Set();
+    usersList.forEach((user) => {
+      user.roles?.forEach((role) => {
+        if (role.branch?.branch_name) {
+          branchNames.add(role.branch.branch_name);
+        }
+      });
+    });
+    return Array.from(branchNames);
+  };
+
+  // 🔹 Calculate stats
+  const stats = {
+    totalUsers: usersList.length,
+    usersWithTenantWideRoles: usersList.filter((user) =>
+      user.roles?.some((role) => role.scope === "tenant")
+    ).length,
+    usersWithBranchRoles: usersList.filter((user) =>
+      user.roles?.some((role) => role.scope === "branch")
+    ).length,
+    activeUsers: usersList.filter((user) => !user.is_owner).length,
+  };
+
   // 🔹 DataTable columns
   const columns = [
     {
@@ -137,11 +188,11 @@ const Users = () => {
           <div className="flex items-center gap-2">
             <UserIcon className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">{name}</span>
-            {isOwner ? (
+            {isOwner && (
               <Badge variant="secondary" className="text-xs">
                 Owner
               </Badge>
-            ) : null}
+            )}
           </div>
         );
       },
@@ -169,24 +220,99 @@ const Users = () => {
       ),
     },
     {
-      accessorKey: "role_name",
-      headerName: "Role",
-      header: "Role",
+      accessorKey: "roles",
+      headerName: "Roles & Branches",
+      header: "Roles & Branches",
       cell: ({ row }) => {
-        const role = row.getValue("role_name");
+        const roles = row.original.roles || [];
+
+        if (roles.length === 0) {
+          return (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <ShieldCheck className="h-4 w-4" />
+              No roles assigned
+            </div>
+          );
+        }
+
+        // Show first role + count if more
+        const firstRole = roles[0];
+        const remainingCount = roles.length - 1;
+
         return (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <ShieldCheck className="h-4 w-4" />
-            {role || "—"}
+          <div className="flex items-center gap-2 flex-wrap">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant={
+                      firstRole.scope === "tenant" ? "default" : "secondary"
+                    }
+                    className="cursor-help"
+                  >
+                    <ShieldCheck className="h-3 w-3 mr-1" />
+                    {firstRole.role_name}
+                    {firstRole.branch && (
+                      <>
+                        <Building2 className="h-3 w-3 ml-1 mr-1" />
+                        <span className="text-xs">
+                          {firstRole.branch.branch_name}
+                        </span>
+                      </>
+                    )}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">
+                    {firstRole.scope === "tenant"
+                      ? "Tenant-wide access"
+                      : `Access to ${
+                          firstRole.branch?.branch_name || "branch"
+                        }`}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            {remainingCount > 0 && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="cursor-help">
+                      +{remainingCount} more
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="space-y-1">
+                      {roles.slice(1).map((role, idx) => (
+                        <div key={idx} className="text-xs">
+                          • {role.role_name}
+                          {role.branch && ` (${role.branch.branch_name})`}
+                        </div>
+                      ))}
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
         );
       },
+      // Custom filter function for roles
+      filterFn: (row, columnId, filterValue) => {
+        const roles = row.original.roles || [];
+        return roles.some(
+          (role) =>
+            role.role_name?.toLowerCase().includes(filterValue.toLowerCase()) ||
+            role.branch?.branch_name
+              ?.toLowerCase()
+              .includes(filterValue.toLowerCase())
+        );
+      },
     },
-
     {
       accessorKey: "created_on",
       headerName: "Created On",
-      header: "Created On",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -199,7 +325,7 @@ const Users = () => {
       cell: ({ row }) => {
         const date = new Date(row.getValue("created_on"));
         return (
-          <div className="text-sm text-muted-foreground px-4">
+          <div className="text-sm text-muted-foreground">
             {date.toLocaleDateString()}
           </div>
         );
@@ -210,7 +336,7 @@ const Users = () => {
       headerName: "Actions",
       cell: ({ row }) => {
         const user = row.original;
-        const isOwner = row.original.is_owner;
+        const isOwner = user.is_owner;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -275,6 +401,26 @@ const Users = () => {
             </Card>
           ))}
         </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-64" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2">
+                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+              <div className="space-y-2">
+                {[...Array(5)].map((_, i) => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -286,7 +432,7 @@ const Users = () => {
         <div className="space-y-1">
           <h2 className="text-3xl font-bold tracking-tight">Users</h2>
           <p className="text-muted-foreground">
-            Manage your team members with ease
+            Manage your team members and their role assignments
           </p>
         </div>
         <Button onClick={() => router.push("/controls/users/add")}>
@@ -303,10 +449,53 @@ const Users = () => {
             <UserIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{usersList.length}</div>
+            <div className="text-2xl font-bold">{stats.totalUsers}</div>
+            <p className="text-xs text-muted-foreground">Active team members</p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Tenant-Wide Access
+            </CardTitle>
+            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.usersWithTenantWideRoles}
+            </div>
             <p className="text-xs text-muted-foreground">
-              {usersList.length > 1 ? "+2 from last month" : "No change"}
+              Users with global roles
             </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Branch-Specific
+            </CardTitle>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {stats.usersWithBranchRoles}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Users with branch roles
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
+            <UserIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.activeUsers}</div>
+            <p className="text-xs text-muted-foreground">Non-owner users</p>
           </CardContent>
         </Card>
       </div>
@@ -326,7 +515,7 @@ const Users = () => {
                 <Skeleton className="h-10 w-24" />
               </div>
               <div className="space-y-2">
-                {[...Array(3)].map((_, i) => (
+                {[...Array(5)].map((_, i) => (
                   <Skeleton key={i} className="h-12 w-full" />
                 ))}
               </div>
@@ -334,13 +523,18 @@ const Users = () => {
           </CardContent>
         </Card>
       ) : (
-        <DataTable
-          columns={columns}
-          rows={filteredUsersList}
-          onDataTableSearch={onDataTableSearch}
-          searchplaceholder={"Search users..."}
-          filterColumns={["role_name"]}
-        />
+        <Card>
+          <CardHeader></CardHeader>
+          <CardContent>
+            <DataTable
+              columns={columns}
+              rows={filteredUsersList}
+              onDataTableSearch={onDataTableSearch}
+              searchplaceholder={"Search users, roles, or branches..."}
+              filterColumns={["roles"]}
+            />
+          </CardContent>
+        </Card>
       )}
     </div>
   );
