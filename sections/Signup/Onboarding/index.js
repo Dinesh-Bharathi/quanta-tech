@@ -17,6 +17,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const orgSchema = z.object({
   organizationName: z.string().min(2, "Organization name is required"),
@@ -30,6 +32,9 @@ const orgSchema = z.object({
 const Onboarding = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(false);
+
+  const userUuid = searchParams.get("user_uuid");
 
   const {
     register,
@@ -40,8 +45,15 @@ const Onboarding = () => {
     resolver: zodResolver(orgSchema),
   });
 
+  useEffect(() => {
+    if (!userUuid) {
+      toast.error("Invalid onboarding link.");
+      router.push("/signup");
+    }
+  }, [userUuid, router]);
+
   const onSubmit = async (data) => {
-    const userUuid = searchParams.get("user_uuid");
+    if (!userUuid) return;
 
     const payload = {
       tent_name: data.organizationName,
@@ -53,6 +65,8 @@ const Onboarding = () => {
     };
 
     try {
+      setLoading(true);
+
       const res = await AuthApi.registerTenant(userUuid, payload);
 
       if (res.data?.success === false) {
@@ -61,127 +75,156 @@ const Onboarding = () => {
       }
 
       toast.success(
-        res.data?.message || "Organization registered successfully!"
+        res.data?.message ||
+          "Organization setup complete! Free trial activated."
       );
+
       router.push("/login");
     } catch (err) {
-      console.log("API Error:", err);
       const backendMsg = err?.response?.data?.message || "Something went wrong";
       toast.error(backendMsg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <Card className="w-full max-w-3xl shadow-lg">
-        <CardHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold leading-tight">
-                Let&apos;s Setup Your Organization
+    <div className="flex items-center justify-center min-h-screen bg-background px-4">
+      <div className="w-full max-w-3xl">
+        <Card className="shadow-xl border border-border/50">
+          <CardHeader>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-bold leading-tight">
+                Create Your Organization
               </h1>
-              <p className="text-sm text-muted-foreground">
-                Provide your business details so we can personalize your
-                workspace.
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label>Organization Name *</Label>
-                <Input
-                  {...register("organizationName")}
-                  className={errors.organizationName ? "border-red-500" : ""}
-                />
-                {errors.organizationName && (
-                  <p className="text-sm text-red-500">
-                    {errors.organizationName.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label>Register No / GST Number *</Label>
-                <Input
-                  {...register("registrationNumber")}
-                  className={errors.registrationNumber ? "border-red-500" : ""}
-                />
-                {errors.registrationNumber && (
-                  <p className="text-sm text-red-500">
-                    {errors.registrationNumber.message}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Label>Address Line 1 *</Label>
-              <Input
-                {...register("address1")}
-                className={errors.address1 ? "border-red-500" : ""}
-              />
-              {errors.address1 && (
-                <p className="text-sm text-red-500">
-                  {errors.address1.message}
+                <p className="text-sm text-muted-foreground">
+                  You&apos;re almost done! Just a few details to set up your
+                  workspace.
                 </p>
-              )}
+                <p className="text-sm text-muted-foreground">
+                  Your <strong>14-day Free Trial</strong> will start
+                  automatically.
+                </p>
+              </div>
             </div>
+          </CardHeader>
 
-            <div>
-              <Label>Address Line 2</Label>
-              <Input {...register("address2")} />
-            </div>
+          <CardContent>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              {/* Organization + GST */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Organization Name *</Label>
+                  <Input
+                    {...register("organizationName")}
+                    className={errors.organizationName ? "border-red-500" : ""}
+                  />
+                  {errors.organizationName && (
+                    <p className="text-sm text-red-500">
+                      {errors.organizationName.message}
+                    </p>
+                  )}
+                </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <Label>State *</Label>
-                <Select onValueChange={(val) => setValue("state", val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                    <SelectItem value="Karnataka">Karnataka</SelectItem>
-                    <SelectItem value="Kerala">Kerala</SelectItem>
-                    <SelectItem value="Telangana">Telangana</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.state && (
-                  <p className="text-sm text-red-500">{errors.state.message}</p>
-                )}
+                <div>
+                  <Label>Register No / GST Number *</Label>
+                  <Input
+                    {...register("registrationNumber")}
+                    className={
+                      errors.registrationNumber ? "border-red-500" : ""
+                    }
+                  />
+                  {errors.registrationNumber && (
+                    <p className="text-sm text-red-500">
+                      {errors.registrationNumber.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
+              {/* Address */}
               <div>
-                <Label>Country *</Label>
-                <Select onValueChange={(val) => setValue("country", val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="India">India</SelectItem>
-                    <SelectItem value="USA">USA</SelectItem>
-                    <SelectItem value="Canada">Canada</SelectItem>
-                    <SelectItem value="UK">UK</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.country && (
+                <Label>Address Line 1 *</Label>
+                <Input
+                  {...register("address1")}
+                  className={errors.address1 ? "border-red-500" : ""}
+                />
+                {errors.address1 && (
                   <p className="text-sm text-red-500">
-                    {errors.country.message}
+                    {errors.address1.message}
                   </p>
                 )}
               </div>
-            </div>
 
-            <div className="flex justify-end">
-              <Button type="submit">Continue</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              <div>
+                <Label>Address Line 2</Label>
+                <Input {...register("address2")} />
+              </div>
+
+              {/* State + Country */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label>State *</Label>
+                  <Select onValueChange={(val) => setValue("state", val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
+                      <SelectItem value="Karnataka">Karnataka</SelectItem>
+                      <SelectItem value="Kerala">Kerala</SelectItem>
+                      <SelectItem value="Telangana">Telangana</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.state && (
+                    <p className="text-sm text-red-500">
+                      {errors.state.message}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label>Country *</Label>
+                  <Select onValueChange={(val) => setValue("country", val)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="India">India</SelectItem>
+                      <SelectItem value="USA">USA</SelectItem>
+                      <SelectItem value="Canada">Canada</SelectItem>
+                      <SelectItem value="UK">UK</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.country && (
+                    <p className="text-sm text-red-500">
+                      {errors.country.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary-foreground" />{" "}
+                      Creating...
+                    </>
+                  ) : (
+                    "Complete Setup"
+                  )}
+                </Button>
+              </div>
+            </form>
+
+            <p className="text-xs text-muted-foreground text-right mt-4">
+              By continuing, you agree to our Terms & Privacy Policy.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };

@@ -10,7 +10,7 @@ import {
   applyThemeWithFontLoading,
 } from "@/lib/theme-utils";
 import { toast } from "sonner";
-import { Palette } from "lucide-react";
+import { Loader2, Palette } from "lucide-react";
 
 const ThemeCustomizationContext = createContext({});
 
@@ -106,7 +106,7 @@ export function ThemeCustomizationProvider({ children }) {
       >
         {/* Simple loading state that matches theme immediately */}
         <div className="fixed inset-0 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary" />
         </div>
       </div>
     );
