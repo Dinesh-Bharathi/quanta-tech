@@ -8,10 +8,14 @@ import { cn } from "@/lib/utils";
 import { useRouteGuard } from "@/hooks/useRouteGuard";
 
 export default function DashboardLayout({ children }) {
-  const { tentDetails, user } = useAuth();
+  const { tentDetails, user, isAccountSuspended } = useAuth();
   const { layoutConfig } = useThemeCustomization();
 
   useRouteGuard();
+
+  if (isAccountSuspended) {
+    return <div className="min-h-screen flex flex-col"></div>;
+  }
 
   // Don't render sidebar if position is "none"
   if (layoutConfig.sidebarPosition === "none") {

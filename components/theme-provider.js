@@ -106,7 +106,7 @@ export function ThemeCustomizationProvider({ children }) {
       >
         {/* Simple loading state that matches theme immediately */}
         <div className="fixed inset-0 flex items-center justify-center">
-          <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin mr-2 text-primary" />
         </div>
       </div>
     );

@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import AuthApi from "@/services/auth/api";
 import { decryption, encryption } from "@/lib/encryption";
 import { PUBLIC_ROUTES } from "@/constants";
+import { SubscriptionBanner } from "@/components/dashboard/subscription-banner";
 
 const AuthContext = createContext();
 
@@ -22,6 +23,8 @@ export const AuthProvider = ({ children }) => {
   const [currentBranch, setCurrentBranch] = useState(null);
   const [branchesList, setBranchesList] = useState([]);
   const [permissions, setPermissions] = useState(null);
+  const [subscriptionDetails, setSubscriptionDetails] = useState(null);
+  const [isAccountSuspended, setIsAccountSuspended] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -152,6 +155,8 @@ export const AuthProvider = ({ children }) => {
           await fetchSession(); // get user info post-login
           toast.success("Login successful", { id: toastId });
 
+          const data = decryption(response.data?.data);
+
           const redirectPath = searchParams.get("redirect") || "/dashboard";
           router.push(redirectPath);
           return true;
@@ -195,6 +200,7 @@ export const AuthProvider = ({ children }) => {
         setBranchesList(sessionData.branches || []);
         setPermissions(sessionData.permissions || null);
         setIsAuthenticated(true);
+        setSubscriptionDetails(sessionData?.subscription || null);
 
         // Determine current branch
         let selectedBranch = null;
@@ -283,6 +289,7 @@ export const AuthProvider = ({ children }) => {
       setPermissions(null);
       setIsAuthenticated(false);
       clearBranchPreference();
+      setSubscriptionDetails(null);
 
       toast.success("Logout successful", { id: toastId });
     } catch (err) {
@@ -298,6 +305,30 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     fetchSession();
   }, [fetchSession]);
+
+  useEffect(() => {
+    if (!subscriptionDetails) return setIsAccountSuspended(false);
+
+    const calculateDaysRemaining = () => {
+      const now = new Date();
+      const endDate = new Date(subscriptionDetails.end_date);
+      const diffTime = endDate.getTime() - now.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // Determine status based on days remaining
+      if (diffDays <= -3) {
+        // Day 4 onwards after expiry - Account Suspended
+        setIsAccountSuspended(true);
+      } else {
+        setIsAccountSuspended(false);
+      }
+    };
+
+    calculateDaysRemaining();
+    const interval = setInterval(calculateDaysRemaining, 1000 * 60 * 60);
+
+    return () => clearInterval(interval);
+  }, [subscriptionDetails]);
 
   return (
     <AuthContext.Provider
@@ -333,12 +364,17 @@ export const AuthProvider = ({ children }) => {
         logout,
         fetchSession,
 
-        // Legacy compatibility (for existing code)
-        currentBranch, // Alias for backward compatibility
-        setCurrentBranch, // Alias for backward compatibility
+        // Branch and switch
+        currentBranch,
+        setCurrentBranch,
+        subscriptionDetails,
+        isAccountSuspended,
       }}
     >
       {!loading && children}
+      {!loading && isAuthenticated && (
+        <SubscriptionBanner subscriptionData={subscriptionDetails} />
+      )}
     </AuthContext.Provider>
   );
 };
