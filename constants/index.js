@@ -35,6 +35,11 @@ export const API_ENDPOINTS = {
   GET_PROFILE: "/settings/user-profile/:userUuid",
   UPDATE_PROFILE: "/settings/user-profile/:userUuid",
   UPDATE_PASSWORD: "/auth/change-password",
+
+  // Lookups
+  COUNTRIES: "/lookups/countries",
+  STATES_BY_COUNTRY: "/lookups/states/:countryCode",
+  COUNTRY_DETAILS: "/lookups/country/:countryCode",
 };
 
 export const PUBLIC_ROUTES = [

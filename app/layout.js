@@ -5,6 +5,8 @@ import { Toaster } from "sonner";
 import { AuthProvider } from "@/context/AuthContext";
 import { ConfirmationProvider } from "@/context/ConfirmationContext";
 import ConfirmationPrompt from "@/components/ConfirmationPrompt";
+import { LookupProvider } from "@/context/LookupContext";
+import ReactQueryProvider from "@/components/ReactQueryProvider";
 import Loading from "./loading";
 
 export const metadata = {
@@ -26,18 +28,22 @@ export default function RootLayout({ children }) {
         >
           <ThemeCustomizationProvider>
             <AuthProvider>
-              <ConfirmationProvider>
-                {children}
-                {/* <Loading /> */}
-                <Toaster
-                  toastOptions={{ className: "sonner-toast" }}
-                  position="bottom-right"
-                  duration={2000}
-                  richColors
-                  closeButton
-                />
-                <ConfirmationPrompt />
-              </ConfirmationProvider>
+              <ReactQueryProvider>
+                <LookupProvider>
+                  <ConfirmationProvider>
+                    {children}
+                    {/* <Loading /> */}
+                    <Toaster
+                      toastOptions={{ className: "sonner-toast" }}
+                      position="bottom-right"
+                      duration={2000}
+                      richColors
+                      closeButton
+                    />
+                    <ConfirmationPrompt />
+                  </ConfirmationProvider>
+                </LookupProvider>
+              </ReactQueryProvider>
             </AuthProvider>
           </ThemeCustomizationProvider>
         </ThemeProvider>

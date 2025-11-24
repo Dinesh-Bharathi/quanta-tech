@@ -5,6 +5,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useLookup } from "@/context/LookupContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +25,9 @@ const loginSchema = z.object({
 
 export function LoginForm() {
   const { login } = useAuth();
+  const { countries } = useLookup();
+
+  console.log("countries", countries);
 
   const {
     register,
