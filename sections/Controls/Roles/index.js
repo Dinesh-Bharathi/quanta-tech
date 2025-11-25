@@ -133,6 +133,7 @@ const Roles = () => {
   const columns = [
     {
       accessorKey: "role_name",
+      headerName: "Role Name",
       header: ({ column }) => (
         <Button
           variant="ghost"
@@ -150,12 +151,6 @@ const Roles = () => {
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-muted-foreground" />
             <span className="font-medium">{name}</span>
-
-            {type === "SYSTEM" && (
-              <Badge variant="outline" className="text-xs">
-                System
-              </Badge>
-            )}
           </div>
         );
       },
@@ -164,6 +159,7 @@ const Roles = () => {
     {
       accessorKey: "description",
       header: "Description",
+      headerName: "Description",
       cell: ({ row }) => (
         <div className="text-sm text-muted-foreground max-w-sm truncate">
           {row.getValue("description")}
@@ -174,11 +170,12 @@ const Roles = () => {
     {
       accessorKey: "assigned_users_count",
       header: "Users",
+      headerName: "Users",
       cell: ({ row }) => {
         const count = row.getValue("assigned_users_count");
         return (
           <Badge variant={count > 0 ? "default" : "secondary"}>
-            {count} users
+            {count} user(s)
           </Badge>
         );
       },
@@ -187,6 +184,7 @@ const Roles = () => {
     {
       accessorKey: "created_by",
       header: "Created By",
+      headerName: "Created By",
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
           {row.getValue("created_by") || "System"}
@@ -197,6 +195,7 @@ const Roles = () => {
     {
       accessorKey: "updated_by",
       header: "Updated By",
+      headerName: "Updated By",
       cell: ({ row }) => (
         <span className="text-sm text-muted-foreground">
           {row.getValue("updated_by") || "—"}
@@ -204,45 +203,47 @@ const Roles = () => {
       ),
     },
 
-    {
-      accessorKey: "updated_at",
-      header: ({ column }) => (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Updated On
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      ),
-      cell: ({ row }) => {
-        const dt = row.getValue("updated_at");
-        if (!dt) return <span className="text-muted-foreground">—</span>;
+    // {
+    //   accessorKey: "updated_at",
+    //   header: ({ column }) => (
+    //     <Button
+    //       variant="ghost"
+    //       onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+    //     >
+    //       Updated On
+    //       <ArrowUpDown className="ml-2 h-4 w-4" />
+    //     </Button>
+    //   ),
+    //   cell: ({ row }) => {
+    //     const dt = row.getValue("updated_at");
+    //     if (!dt) return <span className="text-muted-foreground">—</span>;
 
-        return (
-          <span className="text-sm text-muted-foreground">
-            {new Date(dt).toLocaleDateString()}
-          </span>
-        );
-      },
-    },
+    //     return (
+    //       <span className="text-sm text-muted-foreground">
+    //         {new Date(dt).toLocaleDateString()}
+    //       </span>
+    //     );
+    //   },
+    // },
 
-    {
-      accessorKey: "is_active",
-      header: "Status",
-      cell: ({ row }) => {
-        const active = row.getValue("is_active");
-        return (
-          <Badge variant={active ? "success" : "destructive"}>
-            {active ? "Active" : "Inactive"}
-          </Badge>
-        );
-      },
-    },
+    // {
+    //   accessorKey: "is_active",
+    //   header: "Status",
+    //   headerName: "Status",
+    //   cell: ({ row }) => {
+    //     const active = row.getValue("is_active");
+    //     return (
+    //       <Badge variant={active ? "success" : "destructive"}>
+    //         {active ? "Active" : "Inactive"}
+    //       </Badge>
+    //     );
+    //   },
+    // },
 
     {
       id: "actions",
       header: "Actions",
+      headerName: "Actions",
       cell: ({ row }) => {
         const role = row.original;
         const isSystem = role.role_type === "SYSTEM";
@@ -257,12 +258,6 @@ const Roles = () => {
 
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(role.role_uuid)}
-              >
-                Copy Role ID
-              </DropdownMenuItem>
 
               <DropdownMenuSeparator />
 
@@ -401,7 +396,7 @@ const Roles = () => {
                   rows={filteredRolesList}
                   onDataTableSearch={onDataTableSearch}
                   searchplaceholder="Search roles..."
-                  filterColumns={["is_active"]}
+                  // filterColumns={["is_active"]}
                   isLoading={tableLoading}
                 />
               </CardContent>

@@ -27,9 +27,9 @@ const RoleFormHeader = ({ form }) => {
             name="roleName"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center gap-2 text-sm font-semibold">
+                <FormLabel className="flex items-center gap-2 text-sm">
                   <UserCog className="h-4 w-4 text-primary" />
-                  Role Name
+                  Role Name <span className="text-destructive ml-1">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -47,9 +47,9 @@ const RoleFormHeader = ({ form }) => {
             name="description"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center gap-2 text-sm font-semibold">
+                <FormLabel className="flex items-center gap-2 text-sm">
                   <MessageSquareQuote className="h-4 w-4 text-primary" />
-                  Description
+                  Description <span className="text-destructive ml-1">*</span>
                 </FormLabel>
                 <FormControl>
                   <Input

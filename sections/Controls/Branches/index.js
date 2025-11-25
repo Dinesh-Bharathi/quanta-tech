@@ -1,7 +1,14 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { ArrowUpDown, Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowUpDown,
+  Edit,
+  MoreHorizontal,
+  Phone,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
 import ControlsApi from "@/services/controls/api";
@@ -151,8 +158,12 @@ export const Branches = () => {
       header: "Phone",
       cell: ({ row }) => {
         const value = row.getValue("phone");
+        const countryCode = row?.original?.phone_code;
         return (
-          <span className="text-sm text-muted-foreground">{value || "—"}</span>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="h-4 w-4" />
+            {countryCode ? `+${countryCode}` : ""} {value || "—"}
+          </div>
         );
       },
     },
@@ -216,6 +227,20 @@ export const Branches = () => {
 
             <DropdownMenuContent align="end" className="bg-card border-border">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
+
+              <DropdownMenuItem
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${branch.phone_code ? `+${branch.phone_code}` : ""} ${
+                      branch.phone
+                    }`
+                  );
+                  toast.success("Phone number copied to clipboard");
+                }}
+              >
+                Copy Phone
+              </DropdownMenuItem>
+
               <DropdownMenuSeparator />
 
               <DropdownMenuItem

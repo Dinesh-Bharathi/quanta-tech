@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { MobileNumberField } from "@/components/CustomMobileNumber";
 
 // 🧭 Icons
 import {
@@ -58,8 +59,8 @@ const getUserSchema = (isEdit) =>
     .object({
       user_name: z.string().min(2, "Name must be at least 2 characters"),
       user_email: z.string().email("Enter a valid email address"),
-      user_country_code: z.string().optional(),
-      user_phone: z.string().optional(),
+      user_country_code: z.string().min(1, "Country code is required"),
+      user_phone: z.string().min(1, "Phone number is required"),
       password: isEdit
         ? z.string().optional()
         : z.string().min(6, "Password must be at least 6 characters"),
@@ -72,7 +73,6 @@ const getUserSchema = (isEdit) =>
         if (!isEdit) {
           return data.password === data.confirm_password;
         }
-        // In edit mode, if password is provided, confirm must match
         if (data.password && data.password.length > 0) {
           return data.password === data.confirm_password;
         }
@@ -82,17 +82,30 @@ const getUserSchema = (isEdit) =>
         message: "Passwords do not match",
         path: ["confirm_password"],
       }
+    )
+    .refine(
+      (data) => {
+        // You'll need to pass countries data to validate properly
+        // For now, basic numeric validation
+        return /^\d+$/.test(data.user_phone);
+      },
+      {
+        message: "Phone number must contain only digits",
+        path: ["user_phone"],
+      }
     );
 
 const AddUser = ({ mode = "add", userUuid, userData }) => {
   const router = useRouter();
   const { tentDetails, branchesList } = useAuth();
-
+  console.log("userData", userData);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(mode === "edit");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [mobileValidationError, setMobileValidationError] = useState("");
+  const [isMobileValid, setIsMobileValid] = useState(true);
 
   // 🎯 Role assignments state
   const [roleAssignments, setRoleAssignments] = useState([
@@ -160,8 +173,9 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
   // 🔍 Helper: Determine if role is account-wide based on role_type
   const isAccountWideRole = (roleUuid) => {
     const role = roles.find((r) => r.role_uuid === roleUuid);
+    console.log("role?.role_type", role?.role_type);
     // Assuming role_type "system" or "account" means account-wide access
-    return role?.role_type === "system" || role?.role_type === "account";
+    return role?.role_type === "SYSTEM" || role?.role_type === "ACCOUNT";
   };
 
   // 🔍 Validation: Check for conflicts
@@ -288,6 +302,7 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
   // 🧠 Submit handler
   const onSubmit = async (values) => {
     // Validate role assignments before submission
+    console.log("values", values);
     const validAssignments = roleAssignments.filter((a) => a.role_uuid);
 
     if (!validateRoleAssignments(roleAssignments)) {
@@ -387,7 +402,9 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                   name="user_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Name *</FormLabel>
+                      <FormLabel>
+                        Name <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="John Doe" {...field} />
                       </FormControl>
@@ -402,7 +419,9 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                   name="user_email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email *</FormLabel>
+                      <FormLabel>
+                        Email <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input
                           type="email"
@@ -417,7 +436,7 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                 />
 
                 {/* Country Code */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="user_country_code"
                   render={({ field }) => (
@@ -429,10 +448,10 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 {/* Phone */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="user_phone"
                   render={({ field }) => (
@@ -442,6 +461,45 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                         <Input placeholder="5551234567" {...field} />
                       </FormControl>
                       <FormMessage />
+                    </FormItem>
+                  )}
+                /> */}
+                {/* Mobile Number Field - now fully integrated with form */}
+                <FormField
+                  control={form.control}
+                  name="user_phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Mobile Number{" "}
+                        <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
+                      <MobileNumberField
+                        value={field.value}
+                        countryCode={form.watch("user_country_code")}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Trigger validation
+                          form.trigger("user_phone");
+                        }}
+                        onCountryChange={(code) => {
+                          form.setValue("user_country_code", code);
+                          // Re-validate phone with new country
+                          if (field.value) {
+                            form.trigger("user_phone");
+                          }
+                        }}
+                        // label="Mobile Number"
+                        placeholder="Enter mobile number"
+                        error={
+                          form.formState.errors.user_phone?.message ||
+                          form.formState.errors.user_country_code?.message
+                        }
+                        required={true}
+                        disabled={false}
+                        className="w-full"
+                      />
+                      {/* <FormMessage /> */}
                     </FormItem>
                   )}
                 />
@@ -456,7 +514,10 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password *</FormLabel>
+                        <FormLabel>
+                          Password{" "}
+                          <span className="text-destructive ml-1">*</span>
+                        </FormLabel>
                         <div className="relative">
                           <FormControl>
                             <Input
@@ -490,7 +551,10 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                     name="confirm_password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Confirm Password *</FormLabel>
+                        <FormLabel>
+                          Confirm Password{" "}
+                          <span className="text-destructive ml-1">*</span>
+                        </FormLabel>
                         <div className="relative">
                           <FormControl>
                             <Input
@@ -573,15 +637,16 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                         {/* Role Selection */}
                         <div className="space-y-2">
                           <FormLabel>
-                            Role *
-                            {selectedRole && (
+                            Role{" "}
+                            <span className="text-destructive ml-1">*</span>
+                            {/* {selectedRole && (
                               <Badge
                                 variant="secondary"
                                 className="ml-2 text-xs"
                               >
                                 {selectedRole.role_type}
                               </Badge>
-                            )}
+                            )} */}
                           </FormLabel>
                           <Select
                             value={assignment.role_uuid}
@@ -602,12 +667,12 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                                   >
                                     <div className="flex items-center justify-between w-full">
                                       <span>{role.role_name}</span>
-                                      <Badge
+                                      {/* <Badge
                                         variant="outline"
                                         className="ml-2 text-xs"
                                       >
                                         {role.role_type}
-                                      </Badge>
+                                      </Badge> */}
                                     </div>
                                   </SelectItem>
                                 ))}
@@ -625,9 +690,7 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
                               </span>
                             )}
                             {!isAccountWide && assignment.role_uuid && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                *
-                              </span>
+                              <span className="text-destructive ml-1">*</span>
                             )}
                           </FormLabel>
                           <Select

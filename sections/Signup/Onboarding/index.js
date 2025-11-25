@@ -10,15 +10,17 @@ import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
 import AuthApi from "@/services/auth/api";
 import { toast } from "sonner";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
+import { CountryField } from "@/components/CustomCountry";
+import { StateField } from "@/components/CustomState";
 
 const orgSchema = z.object({
   organizationName: z.string().min(2, "Organization name is required"),
@@ -36,13 +38,16 @@ const Onboarding = () => {
 
   const userUuid = searchParams.get("user_uuid");
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm({
+  const form = useForm({
     resolver: zodResolver(orgSchema),
+    defaultValues: {
+      organizationName: "",
+      registrationNumber: "",
+      address1: "",
+      address2: "",
+      state: "",
+      country: "",
+    },
   });
 
   useEffect(() => {
@@ -111,113 +116,135 @@ const Onboarding = () => {
           </CardHeader>
 
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              {/* Organization + GST */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>Organization Name *</Label>
-                  <Input
-                    {...register("organizationName")}
-                    className={errors.organizationName ? "border-red-500" : ""}
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-6"
+              >
+                {/* Organization + GST */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="organizationName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label>Organization Name *</Label>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
-                  {errors.organizationName && (
-                    <p className="text-sm text-red-500">
-                      {errors.organizationName.message}
-                    </p>
-                  )}
+
+                  <FormField
+                    control={form.control}
+                    name="registrationNumber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <Label>Register No / GST Number *</Label>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                <div>
-                  <Label>Register No / GST Number *</Label>
-                  <Input
-                    {...register("registrationNumber")}
-                    className={
-                      errors.registrationNumber ? "border-red-500" : ""
-                    }
-                  />
-                  {errors.registrationNumber && (
-                    <p className="text-sm text-red-500">
-                      {errors.registrationNumber.message}
-                    </p>
+                {/* Address */}
+                <FormField
+                  control={form.control}
+                  name="address1"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Address Line 1 *</Label>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-              </div>
-
-              {/* Address */}
-              <div>
-                <Label>Address Line 1 *</Label>
-                <Input
-                  {...register("address1")}
-                  className={errors.address1 ? "border-red-500" : ""}
                 />
-                {errors.address1 && (
-                  <p className="text-sm text-red-500">
-                    {errors.address1.message}
-                  </p>
-                )}
-              </div>
 
-              <div>
-                <Label>Address Line 2</Label>
-                <Input {...register("address2")} />
-              </div>
-
-              {/* State + Country */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label>State *</Label>
-                  <Select onValueChange={(val) => setValue("state", val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select state" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Tamil Nadu">Tamil Nadu</SelectItem>
-                      <SelectItem value="Karnataka">Karnataka</SelectItem>
-                      <SelectItem value="Kerala">Kerala</SelectItem>
-                      <SelectItem value="Telangana">Telangana</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.state && (
-                    <p className="text-sm text-red-500">
-                      {errors.state.message}
-                    </p>
+                <FormField
+                  control={form.control}
+                  name="address2"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Label>Address Line 2</Label>
+                      <FormControl>
+                        <Input {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
+                />
+
+                {/* State + Country */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="country"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <CountryField
+                            value={field.value}
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              // Clear state when country changes
+                              form.setValue("state", "");
+                            }}
+                            label="Country"
+                            placeholder="Select your country"
+                            error={form.formState.errors.country?.message}
+                            required
+                            showFlag={true}
+                            showCallingCode={false}
+                          />
+                        </FormControl>
+                        {/* <FormMessage /> */}
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <StateField
+                            value={field.value}
+                            countryName={form.watch("country")}
+                            onValueChange={field.onChange}
+                            label="State"
+                            placeholder="Select your state"
+                            error={form.formState.errors.state?.message}
+                            required
+                          />
+                        </FormControl>
+                        {/* <FormMessage /> */}
+                      </FormItem>
+                    )}
+                  />
                 </div>
 
-                <div>
-                  <Label>Country *</Label>
-                  <Select onValueChange={(val) => setValue("country", val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="India">India</SelectItem>
-                      <SelectItem value="USA">USA</SelectItem>
-                      <SelectItem value="Canada">Canada</SelectItem>
-                      <SelectItem value="UK">UK</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.country && (
-                    <p className="text-sm text-red-500">
-                      {errors.country.message}
-                    </p>
-                  )}
+                <div className="flex justify-end">
+                  <Button type="submit" disabled={loading}>
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary-foreground" />{" "}
+                        Creating...
+                      </>
+                    ) : (
+                      "Complete Setup"
+                    )}
+                  </Button>
                 </div>
-              </div>
-
-              <div className="flex justify-end">
-                <Button type="submit" disabled={loading}>
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary-foreground" />{" "}
-                      Creating...
-                    </>
-                  ) : (
-                    "Complete Setup"
-                  )}
-                </Button>
-              </div>
-            </form>
+              </form>
+            </Form>
 
             <p className="text-xs text-muted-foreground text-right mt-4">
               By continuing, you agree to our Terms & Privacy Policy.

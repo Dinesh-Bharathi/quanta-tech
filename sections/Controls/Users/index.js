@@ -91,6 +91,7 @@ const Users = () => {
         tentDetails?.tent_uuid,
         { all: false, branchUuid: currentBranch?.branch_uuid }
       );
+      console.log("object", response?.data?.data);
       setUsersList(response?.data?.data || []);
     } catch (err) {
       console.error("Fetch users:", err);
@@ -212,12 +213,17 @@ const Users = () => {
       accessorKey: "user_phone",
       headerName: "Phone",
       header: "Phone",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Phone className="h-4 w-4" />
-          {row.getValue("user_phone") || "—"}
-        </div>
-      ),
+      cell: ({ row }) => {
+        return (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Phone className="h-4 w-4" />
+            {row?.original?.user_country_code
+              ? `+${row?.original?.user_country_code}`
+              : ""}{" "}
+            {row.getValue("user_phone") || "—"}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "roles",
@@ -348,9 +354,24 @@ const Users = () => {
             <DropdownMenuContent align="end" className="bg-card border-border">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(user.user_uuid)}
+                onClick={() => {
+                  navigator.clipboard.writeText(user.user_email);
+                  toast.success("Email copied to clipboard");
+                }}
               >
-                Copy User ID
+                Copy Email
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${
+                      user.user_country_code ? `+${user.user_country_code}` : ""
+                    } ${user.user_phone}`
+                  );
+                  toast.success("Phone number copied to clipboard");
+                }}
+              >
+                Copy Phone
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -530,8 +551,8 @@ const Users = () => {
               columns={columns}
               rows={filteredUsersList}
               onDataTableSearch={onDataTableSearch}
-              searchplaceholder={"Search users, roles, or branches..."}
-              filterColumns={["roles"]}
+              searchplaceholder={"Search name, email, phone or role..."}
+              // filterColumns={["roles"]}
             />
           </CardContent>
         </Card>

@@ -11,6 +11,8 @@ import ControlsApi from "@/services/controls/api";
 import { useAuth } from "@/context/AuthContext";
 import { encryption, decryption } from "@/lib/encryption";
 import Loading from "@/app/(dashboard)/loading";
+import { CountryField } from "@/components/CustomCountry";
+import { StateField } from "@/components/CustomState";
 
 // UI
 import { Button } from "@/components/ui/button";
@@ -38,19 +40,33 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { ArrowLeft, Save } from "lucide-react";
+import { MobileNumberField } from "@/components/CustomMobileNumber";
 
 // --------------------------------------------------
 // 🔐 Validation Schema
 // --------------------------------------------------
-const BranchSchema = z.object({
-  branch_name: z.string().min(2, "Branch name must be at least 2 characters"),
-  address1: z.string().optional(),
-  address2: z.string().optional(),
-  phone: z.string().optional(),
-  country: z.string().optional(),
-  state: z.string().optional(),
-  postal_code: z.string().optional(),
-});
+const BranchSchema = z
+  .object({
+    branch_name: z.string().min(2, "Branch name must be at least 2 characters"),
+    address1: z.string().min(1, "Address1 is required"),
+    address2: z.string().optional(),
+    phone_code: z.string().min(1, "Country code is required"),
+    phone: z.string().min(1, "Phone number is required"),
+    state: z.string().min(1, "State is required"),
+    country: z.string().min(1, "Country is required"),
+    postal_code: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // You'll need to pass countries data to validate properly
+      // For now, basic numeric validation
+      return /^\d+$/.test(data.phone);
+    },
+    {
+      message: "Phone number must contain only digits",
+      path: ["phone"],
+    }
+  );
 
 // --------------------------------------------------
 // 🧩 Component
@@ -67,12 +83,16 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
       branch_name: "",
       address1: "",
       address2: "",
+      phone_code: "",
       phone: "",
       country: "",
       state: "",
       postal_code: "",
     },
   });
+
+  console.log("error", form.formState.errors);
+  console.log("object", form.watch());
 
   // --------------------------------------------------
   // 🧠 Populate when editing
@@ -96,6 +116,7 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
           branch_name: data.branch_name || "",
           address1: data.address1 || "",
           address2: data.address2 || "",
+          phone_code: data.phone_code || "",
           phone: data.phone || "",
           country: data.country || "",
           state: data.state || "",
@@ -194,7 +215,10 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                   name="branch_name"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Branch Name</FormLabel>
+                      <FormLabel>
+                        Branch Name{" "}
+                        <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Branch Alpha" {...field} />
                       </FormControl>
@@ -204,7 +228,7 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                 />
 
                 {/* Phone */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="phone"
                   render={({ field }) => (
@@ -216,6 +240,48 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                       <FormMessage />
                     </FormItem>
                   )}
+                /> */}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Mobile number{" "}
+                        <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
+                      <MobileNumberField
+                        value={field.value}
+                        countryCode={form.watch("phone_code")}
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Trigger validation
+                          form.trigger("phone");
+                          if (field.value) {
+                            form.trigger("phone");
+                            form.trigger("phone_code");
+                          }
+                        }}
+                        onCountryChange={(code) => {
+                          form.setValue("phone_code", code);
+                          // Re-validate phone with new country
+                          if (field.value) {
+                            form.trigger("phone");
+                            form.trigger("phone_code");
+                          }
+                        }}
+                        placeholder="Enter mobile number"
+                        error={
+                          form.formState.errors.phone?.message ||
+                          form.formState.errors.phone_code?.message
+                        }
+                        required={true}
+                        disabled={false}
+                        className="w-full"
+                      />
+                      {/* <FormMessage /> */}
+                    </FormItem>
+                  )}
                 />
 
                 {/* Address 1 */}
@@ -224,7 +290,10 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                   name="address1"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Address Line 1</FormLabel>
+                      <FormLabel>
+                        Address Line 1{" "}
+                        <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
                       <FormControl>
                         <Input placeholder="Street / Building" {...field} />
                       </FormControl>
@@ -249,7 +318,7 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                 />
 
                 {/* Country */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="country"
                   render={({ field }) => (
@@ -264,10 +333,61 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                       <FormMessage />
                     </FormItem>
                   )}
+                /> */}
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Country <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <CountryField
+                          value={field.value}
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Clear state when country changes
+                            form.setValue("state", "");
+                          }}
+                          placeholder="Select your country"
+                          error={form.formState.errors.country?.message}
+                          required={true}
+                          showFlag={true}
+                          showCallingCode={false}
+                        />
+                      </FormControl>
+                      {/* <FormMessage /> */}
+                    </FormItem>
+                  )}
+                />
+
+                {/* State Field */}
+                <FormField
+                  control={form.control}
+                  name="state"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        State <span className="text-destructive ml-1">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <StateField
+                          value={field.value}
+                          countryName={form.watch("country")}
+                          onValueChange={field.onChange}
+                          placeholder="Select your state"
+                          error={form.formState.errors.state?.message}
+                          required={true}
+                        />
+                      </FormControl>
+                      {/* <FormMessage /> */}
+                    </FormItem>
+                  )}
                 />
 
                 {/* State */}
-                <FormField
+                {/* <FormField
                   control={form.control}
                   name="state"
                   render={({ field }) => (
@@ -279,7 +399,7 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
                       <FormMessage />
                     </FormItem>
                   )}
-                />
+                /> */}
 
                 {/* Postal Code */}
                 <FormField

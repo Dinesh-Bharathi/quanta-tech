@@ -17,14 +17,14 @@ export const useLookup = () => useContext(LookupContext);
 
 export function LookupProvider({ children }) {
   const queryClient = useQueryClient(); // NOW WORKS
-  const [countries, setCountries] = useState(null);
+  const [countries, setCountries] = useState([]);
   const [statesMap, setStatesMap] = useState({});
 
   const { data: countriesData } = useCountriesQuery();
 
   useEffect(() => {
     if (countriesData) {
-      setCountries(countriesData);
+      setCountries(countriesData || []);
     }
   }, [countriesData]);
 
