@@ -14,8 +14,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function Error({ error, reset }) {
-  const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     // Log the error to an error reporting service
@@ -26,7 +26,7 @@ export default function Error({ error, reset }) {
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      router.push(isAuthenticated ? "/dashboard" : "/");
+      router.push(isAuthenticated ? "/accesscheck" : "/");
     }
   };
 
@@ -133,7 +133,7 @@ export default function Error({ error, reset }) {
 
         {/* Additional Navigation */}
         <div className="flex justify-center">
-          <Link href={isAuthenticated ? "/dashboard" : "/"}>
+          <Link href={isAuthenticated ? "/accesscheck" : "/"}>
             <Button
               variant="ghost"
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground"

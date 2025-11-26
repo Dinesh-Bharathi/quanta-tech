@@ -33,7 +33,7 @@ export const useFilteredNavigation = () => {
 
   // Combine all navigation for utility functions
   const allNavigation = useMemo(
-    () => [...mainNavigation, ...footerNavigation],
+    () => mainNavigation.concat(footerNavigation),
     [mainNavigation, footerNavigation]
   );
 

@@ -23,14 +23,34 @@ export default {
   signupUser: async (payload) => {
     return await axiosInstance.post(API_ENDPOINTS.SIGNUP, payload);
   },
-   sendVerificationEmail: async (payload) => {
-    return await axiosInstance.post(API_ENDPOINTS.SEND_VERIFICATION_EMAIL, payload);
+  sendVerificationEmail: async (payload) => {
+    return await axiosInstance.post(
+      API_ENDPOINTS.SEND_VERIFICATION_EMAIL,
+      payload
+    );
   },
-   resendVerificationEmail: async (payload) => {
-    return await axiosInstance.post(API_ENDPOINTS.RESEND_VERIFICATION_EMAIL, payload);
+  resendVerificationEmail: async (payload) => {
+    return await axiosInstance.post(
+      API_ENDPOINTS.RESEND_VERIFICATION_EMAIL,
+      payload
+    );
   },
-   registerTenant: async (userUuid, payload) => {
-    const endpoint = API_ENDPOINTS.ONBOARDING_REGISTER.replace(":userUuid", userUuid);
+  registerTenant: async (userUuid, payload) => {
+    const endpoint = API_ENDPOINTS.ONBOARDING_REGISTER.replace(
+      ":userUuid",
+      userUuid
+    );
     return await axiosInstance.post(endpoint, payload);
+  },
+  forgotPassword: async (payload) => {
+    return await axiosInstance.post(API_ENDPOINTS.FORGOT_PASSWORD, payload);
+  },
+  verifyRestPassToken: async (params) => {
+    return await axiosInstance.get(API_ENDPOINTS.VERIFY_FORGOT_PASSWORD, {
+      params,
+    });
+  },
+  resetPassword: async (payload) => {
+    return await axiosInstance.post(API_ENDPOINTS.RESET_PASSWORD, payload);
   },
 };

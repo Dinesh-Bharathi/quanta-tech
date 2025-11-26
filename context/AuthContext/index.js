@@ -14,6 +14,7 @@ import AuthApi from "@/services/auth/api";
 import { decryption, encryption } from "@/lib/encryption";
 import { PUBLIC_ROUTES } from "@/constants";
 import { SubscriptionBanner } from "@/components/dashboard/subscription-banner";
+import Loading from "@/app/loading";
 
 const AuthContext = createContext();
 
@@ -157,7 +158,7 @@ export const AuthProvider = ({ children }) => {
 
           const data = decryption(response.data?.data);
 
-          const redirectPath = searchParams.get("redirect") || "/dashboard";
+          const redirectPath = searchParams.get("redirect") || "/accesscheck";
           router.push(redirectPath);
           return true;
         }
@@ -230,7 +231,7 @@ export const AuthProvider = ({ children }) => {
         // Redirect if on public route
         const currentPath = window.location.pathname;
         if (PUBLIC_ROUTES.includes(currentPath)) {
-          const redirectPath = searchParams.get("redirect") || "/dashboard";
+          const redirectPath = searchParams.get("redirect") || "/accesscheck";
           router.replace(redirectPath);
         }
       } else {
@@ -376,9 +377,15 @@ export const AuthProvider = ({ children }) => {
         isAccountSuspended,
       }}
     >
-      {!loading && children}
-      {!loading && isAuthenticated && (
-        <SubscriptionBanner subscriptionData={subscriptionDetails} />
+      {loading ? (
+        <Loading />
+      ) : (
+        <>
+          {isAuthenticated && (
+            <SubscriptionBanner subscriptionData={subscriptionDetails} />
+          )}
+          {children}
+        </>
       )}
     </AuthContext.Provider>
   );

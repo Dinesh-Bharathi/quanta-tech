@@ -11,7 +11,7 @@ export default function NotFound() {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
   const [countdown, setCountdown] = useState(10);
-  const redirectPath = isAuthenticated ? "/dashboard" : "/";
+  const redirectPath = isAuthenticated ? "/accesscheck" : "/";
 
   useEffect(() => {
     const timer = setInterval(() => {

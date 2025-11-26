@@ -8,6 +8,9 @@ export const API_ENDPOINTS = {
   SEND_VERIFICATION_EMAIL: "/auth/send-verification",
   RESEND_VERIFICATION_EMAIL: "/auth/resend-verification",
   ONBOARDING_REGISTER: "/auth/register-tenant/:userUuid",
+  FORGOT_PASSWORD: "/auth/forgot-password",
+  VERIFY_FORGOT_PASSWORD: "/auth/verify-reset-token",
+  RESET_PASSWORD: "auth/reset-password",
 
   // Controls > User Menus
   USER_NAV_MENUS: "/controls/menu/:userUuid/:branchUuid",

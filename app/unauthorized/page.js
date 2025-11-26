@@ -13,14 +13,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function Unauthorized() {
-  const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
 
   const handleGoBack = () => {
     if (window.history.length > 1) {
       window.history.back();
     } else {
-      router.push(isAuthenticated ? "/dashboard" : "/");
+      router.push(isAuthenticated ? "/accesscheck" : "/");
     }
   };
 
@@ -94,7 +94,7 @@ export default function Unauthorized() {
               </Button>
             </Link>
           ) : (
-            <Link href="/dashboard">
+            <Link href={"/accesscheck"}>
               <Button className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
                 <Home className="h-4 w-4" />
                 Back to Dashboard
