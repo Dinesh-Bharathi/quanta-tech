@@ -91,9 +91,6 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
     },
   });
 
-  console.log("error", form.formState.errors);
-  console.log("object", form.watch());
-
   // --------------------------------------------------
   // 🧠 Populate when editing
   // --------------------------------------------------

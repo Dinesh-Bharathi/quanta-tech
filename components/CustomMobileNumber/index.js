@@ -110,7 +110,6 @@ export function MobileNumberField({
 
     // Revalidate phone number with new country
     const newCountry = countries.find((c) => c.isoCode === isoCode);
-    console.log("newCountry", newCountry);
     onCountryChange?.(newCountry?.phonecode);
     if (value && newCountry?.phoneNumber) {
       const { minLength, maxLength } = newCountry.phoneNumber;

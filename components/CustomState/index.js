@@ -46,10 +46,8 @@ export function StateField({
   // }, [countryCode]);
 
   React.useEffect(() => {
-    console.log("countryName", countryName);
     if (countryName) {
       const foundCountry = countries.find((c) => c.name === countryName);
-      console.log("foundCountry", foundCountry);
       loadStates(foundCountry.isoCode).then((s) => setStates(s));
     }
   }, [countryName, countries]);
@@ -63,7 +61,6 @@ export function StateField({
   // Handle state selection
   const handleStateSelect = (value) => {
     const stateValue = states.find((s) => s.name === value);
-    console.log("stateValue", stateValue);
     onValueChange?.(stateValue.name);
     setOpen(false);
     setSearchQuery("");

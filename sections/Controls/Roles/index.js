@@ -31,11 +31,14 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { decryption } from "@/lib/encryption";
 import DataTable from "@/components/DataTable";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGuard } from "@/components/permissions/PermissionGuard";
 
 const Roles = () => {
   const router = useRouter();
   const { tentDetails } = useAuth();
   const { showConfirmation } = useConfirmation();
+  const { canAdd, canUpdate, canDelete, canRead } = usePermissions();
 
   const [loading, setLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(true);
@@ -239,8 +242,10 @@ const Roles = () => {
     //     );
     //   },
     // },
+  ];
 
-    {
+  if (canUpdate || canDelete) {
+    columns.push({
       id: "actions",
       header: "Actions",
       headerName: "Actions",
@@ -260,28 +265,33 @@ const Roles = () => {
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
               <DropdownMenuSeparator />
+              <PermissionGuard permission="update">
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(`/controls/roles/edit/${role.role_uuid}`)
+                  }
+                >
+                  <Edit className="h-4 w-4 mr-2" /> Edit
+                </DropdownMenuItem>
+              </PermissionGuard>
 
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/controls/roles/edit/${role.role_uuid}`)
-                }
-              >
-                <Edit className="h-4 w-4 mr-2" /> Edit
-              </DropdownMenuItem>
-
-              <DropdownMenuItem
-                disabled={isSystem}
-                className="text-destructive"
-                onClick={() => handleDeleteRole(role.role_uuid, role.role_name)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" /> Delete
-              </DropdownMenuItem>
+              <PermissionGuard permission="delete">
+                <DropdownMenuItem
+                  disabled={isSystem}
+                  className="text-destructive"
+                  onClick={() =>
+                    handleDeleteRole(role.role_uuid, role.role_name)
+                  }
+                >
+                  <Trash2 className="h-4 w-4 mr-2" /> Delete
+                </DropdownMenuItem>
+              </PermissionGuard>
             </DropdownMenuContent>
           </DropdownMenu>
         );
       },
-    },
-  ];
+    });
+  }
 
   /* ------------------------------
        ENTERPRISE METRIC CARDS
@@ -368,10 +378,11 @@ const Roles = () => {
                 Manage user roles, permissions, and access policies.
               </p>
             </div>
-
-            <Button onClick={() => router.push("/controls/roles/add")}>
-              <Plus className="mr-2 h-4 w-4" /> Add Role
-            </Button>
+            <PermissionGuard permission="add">
+              <Button onClick={() => router.push("/controls/roles/add")}>
+                <Plus className="mr-2 h-4 w-4" /> Add Role
+              </Button>
+            </PermissionGuard>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {metricCards.map((card, idx) => (

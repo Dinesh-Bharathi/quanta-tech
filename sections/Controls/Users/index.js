@@ -38,9 +38,12 @@ import ControlsApi from "@/services/controls/api";
 import { decryption } from "@/lib/encryption";
 import DataTable from "@/components/DataTable";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGuard } from "@/components/permissions/PermissionGuard";
 
 const Users = () => {
   const router = useRouter();
+  const { canAdd, canUpdate, canDelete, canRead } = usePermissions();
   const { tentDetails, currentBranch } = useAuth();
   const { showConfirmation } = useConfirmation();
 
@@ -91,7 +94,6 @@ const Users = () => {
         tentDetails?.tent_uuid,
         { all: false, branchUuid: currentBranch?.branch_uuid }
       );
-      console.log("object", response?.data?.data);
       setUsersList(response?.data?.data || []);
     } catch (err) {
       console.error("Fetch users:", err);
@@ -373,23 +375,30 @@ const Users = () => {
               >
                 Copy Phone
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/controls/users/edit/${user.user_uuid}`)
-                }
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit User
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-destructive"
-                disabled={isOwner}
-                onClick={() => handleDeleteUser(user.user_uuid, user.user_name)}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete User
-              </DropdownMenuItem>
+              {(canUpdate || canDelete) && <DropdownMenuSeparator />}
+
+              <PermissionGuard permission="update">
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(`/controls/users/edit/${user.user_uuid}`)
+                  }
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit User
+                </DropdownMenuItem>
+              </PermissionGuard>
+              <PermissionGuard permission="delete">
+                <DropdownMenuItem
+                  className="text-destructive"
+                  disabled={isOwner}
+                  onClick={() =>
+                    handleDeleteUser(user.user_uuid, user.user_name)
+                  }
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete User
+                </DropdownMenuItem>
+              </PermissionGuard>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -456,10 +465,12 @@ const Users = () => {
             Manage your team members and their role assignments
           </p>
         </div>
-        <Button onClick={() => router.push("/controls/users/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
+        <PermissionGuard permission="add">
+          <Button onClick={() => router.push("/controls/users/add")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add User
+          </Button>
+        </PermissionGuard>
       </div>
 
       {/* Summary Cards */}

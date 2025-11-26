@@ -231,7 +231,7 @@ export const AuthProvider = ({ children }) => {
         const currentPath = window.location.pathname;
         if (PUBLIC_ROUTES.includes(currentPath)) {
           const redirectPath = searchParams.get("redirect") || "/dashboard";
-          router.push(redirectPath);
+          router.replace(redirectPath);
         }
       } else {
         // Clear all state if no valid session
@@ -245,7 +245,12 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (err) {
       console.error("Session fetch error:", err);
-
+      if (err?.response?.data?.message) {
+        const currentPath = window.location.pathname;
+        if (!PUBLIC_ROUTES.includes(currentPath)) {
+          toast.error(err.response.data.message);
+        }
+      }
       // Clear all state on error
       setUser(null);
       setTentDetails(null);

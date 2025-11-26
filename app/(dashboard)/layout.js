@@ -5,13 +5,13 @@ import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { useAuth } from "@/context/AuthContext";
 import { useThemeCustomization } from "@/components/theme-provider";
 import { cn } from "@/lib/utils";
-import { useRouteGuard } from "@/hooks/useRouteGuard";
+import Unauthorized from "../unauthorized/page";
+import Loading from "./loading";
+import { PermissionGuard } from "@/components/permissions/PermissionGuard";
 
 export default function DashboardLayout({ children }) {
   const { tentDetails, user, isAccountSuspended } = useAuth();
   const { layoutConfig } = useThemeCustomization();
-
-  useRouteGuard();
 
   if (isAccountSuspended) {
     return <div className="min-h-screen flex flex-col"></div>;
@@ -31,7 +31,13 @@ export default function DashboardLayout({ children }) {
             layoutConfig.contentMaxWidth === "narrow" && "max-w-4xl mx-auto"
           )}
         >
-          {children}
+          <PermissionGuard
+            permission={"read"}
+            loadingFallback={<Loading />}
+            fallback={<Unauthorized />}
+          >
+            {children}
+          </PermissionGuard>
         </main>
         {layoutConfig.footerVisible && tentDetails?.tent_name && (
           <footer className="border-t p-4 text-center text-sm text-muted-foreground">
@@ -69,7 +75,13 @@ export default function DashboardLayout({ children }) {
               layoutConfig.contentMaxWidth === "narrow" && "max-w-4xl mx-auto"
             )}
           >
-            {children}
+            <PermissionGuard
+              permission={"read"}
+              loadingFallback={<Loading />}
+              fallback={<Unauthorized />}
+            >
+              {children}
+            </PermissionGuard>
           </main>
           {layoutConfig.footerVisible && tentDetails?.tent_name && (
             <footer className="border-t p-4 text-center text-sm text-muted-foreground">
@@ -109,7 +121,13 @@ export default function DashboardLayout({ children }) {
             layoutConfig.contentMaxWidth === "narrow" && "max-w-4xl mx-auto"
           )}
         >
-          {children}
+          <PermissionGuard
+            permission={"read"}
+            loadingFallback={<Loading />}
+            fallback={<Unauthorized />}
+          >
+            {children}
+          </PermissionGuard>
         </main>
         {layoutConfig.footerVisible && tentDetails?.tent_name && (
           <footer className="border-t p-4 text-center text-sm text-muted-foreground">

@@ -98,7 +98,6 @@ const getUserSchema = (isEdit) =>
 const AddUser = ({ mode = "add", userUuid, userData }) => {
   const router = useRouter();
   const { tentDetails, branchesList } = useAuth();
-  console.log("userData", userData);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(mode === "edit");
   const [showPassword, setShowPassword] = useState(false);
@@ -173,7 +172,6 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
   // 🔍 Helper: Determine if role is account-wide based on role_type
   const isAccountWideRole = (roleUuid) => {
     const role = roles.find((r) => r.role_uuid === roleUuid);
-    console.log("role?.role_type", role?.role_type);
     // Assuming role_type "system" or "account" means account-wide access
     return role?.role_type === "SYSTEM" || role?.role_type === "ACCOUNT";
   };
@@ -302,7 +300,6 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
   // 🧠 Submit handler
   const onSubmit = async (values) => {
     // Validate role assignments before submission
-    console.log("values", values);
     const validAssignments = roleAssignments.filter((a) => a.role_uuid);
 
     if (!validateRoleAssignments(roleAssignments)) {

@@ -26,9 +26,12 @@ import DataTable from "@/components/DataTable";
 import { Badge } from "@/components/ui/badge";
 import { useConfirmation } from "@/context/ConfirmationContext";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
+import { PermissionGuard } from "@/components/permissions/PermissionGuard";
 
 export const Branches = () => {
   const router = useRouter();
+  const { canAdd, canUpdate, canDelete, canRead } = usePermissions();
   const { tentDetails } = useAuth();
   const { showConfirmation } = useConfirmation();
 
@@ -241,27 +244,31 @@ export const Branches = () => {
                 Copy Phone
               </DropdownMenuItem>
 
-              <DropdownMenuSeparator />
+              {(canUpdate || canDelete) && <DropdownMenuSeparator />}
 
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/controls/branches/edit/${branch.branch_uuid}`)
-                }
-              >
-                <Edit className="mr-2 h-4 w-4" />
-                Edit Branch
-              </DropdownMenuItem>
+              {canUpdate && (
+                <DropdownMenuItem
+                  onClick={() =>
+                    router.push(`/controls/branches/edit/${branch.branch_uuid}`)
+                  }
+                >
+                  <Edit className="mr-2 h-4 w-4" />
+                  Edit Branch
+                </DropdownMenuItem>
+              )}
 
-              <DropdownMenuItem
-                className="text-destructive"
-                disabled={branch.is_hq}
-                onClick={() =>
-                  handleDeleteBranch(branch.branch_uuid, branch.branch_name)
-                }
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Delete Branch
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive"
+                  disabled={branch.is_hq}
+                  onClick={() =>
+                    handleDeleteBranch(branch.branch_uuid, branch.branch_name)
+                  }
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Branch
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -314,10 +321,12 @@ export const Branches = () => {
             Create and manage all branches within your organisation.
           </p>
         </div>
-        <Button onClick={() => router.push("/controls/branches/add")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Branch
-        </Button>
+        <PermissionGuard permission="add">
+          <Button onClick={() => router.push("/controls/branches/add")}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Branch
+          </Button>
+        </PermissionGuard>
       </div>
 
       {dataTableLoading ? (

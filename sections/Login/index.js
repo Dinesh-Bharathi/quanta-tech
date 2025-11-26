@@ -25,9 +25,6 @@ const loginSchema = z.object({
 
 export function LoginForm() {
   const { login } = useAuth();
-  const { countries } = useLookup();
-
-  console.log("countries", countries);
 
   const {
     register,
