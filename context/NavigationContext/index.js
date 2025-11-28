@@ -12,13 +12,13 @@ export const useNavigation = () => useContext(NavigationContext);
 export function NavigationProvider({ children }) {
   const { user, currentBranch } = useAuth();
 
-  const enabled = Boolean(user?.user_uuid && currentBranch?.branch_uuid);
+  const enabled = Boolean(user?.tenant_user_uuid && currentBranch?.branch_uuid);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ["nav-menus", user?.user_uuid, currentBranch?.branch_uuid],
+    queryKey: ["nav-menus", user?.tenant_user_uuid, currentBranch?.branch_uuid],
     queryFn: async () => {
       const response = await AuthApi.getUserNavMenus(
-        user.user_uuid,
+        user.tenant_user_uuid,
         currentBranch.branch_uuid
       );
       const decrypted = decryption(response.data?.data);

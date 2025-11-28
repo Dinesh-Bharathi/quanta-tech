@@ -87,7 +87,7 @@ export const Branches = () => {
     setDataTableLoading(true);
     try {
       const response = await ControlsApi.getTenantBranches(
-        tentDetails?.tent_uuid
+        tentDetails?.tenant_uuid
       );
       setBranchesList(response.data.data);
       setFilterBranchesList(response.data.data);
@@ -97,13 +97,13 @@ export const Branches = () => {
       setLoading(false);
       setDataTableLoading(false);
     }
-  }, [branchesList.length, tentDetails?.tent_uuid]);
+  }, [branchesList.length, tentDetails?.tenant_uuid]);
 
   useEffect(() => {
-    if (tentDetails?.tent_uuid) {
+    if (tentDetails?.tenant_uuid) {
       getBranchesList();
     }
-  }, [getBranchesList, tentDetails?.tent_uuid]);
+  }, [getBranchesList, tentDetails?.tenant_uuid]);
 
   const handleDeleteBranch = async (branch_uuid, branch_name) => {
     await showConfirmation({
@@ -115,7 +115,7 @@ export const Branches = () => {
       onConfirm: async () => {
         try {
           await ControlsApi.deleteTenantBranch(
-            tentDetails?.tent_uuid,
+            tentDetails?.tenant_uuid,
             branch_uuid
           );
           toast.success("Branch deleted successfully");

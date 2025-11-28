@@ -24,7 +24,7 @@ const RoleFormHeader = ({ form }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
-            name="roleName"
+            name="role_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel className="flex items-center gap-2 text-sm">

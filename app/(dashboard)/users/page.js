@@ -14,10 +14,10 @@ import _ from "lodash";
 import { toast } from "sonner";
 // import { rolesApi } from "@/services/settings/config/roles/api";
 
-const fetchUsers = async (tent_uuid) => {
+const fetchUsers = async (tenant_uuid) => {
   try {
     const users = await axiosInstance.get(
-      `/api/account/users/all/${tent_uuid}`
+      `/api/account/users/all/${tenant_uuid}`
     );
     const decryptRes = decryption(users.data.data);
     return decryptRes;
@@ -28,7 +28,7 @@ const fetchUsers = async (tent_uuid) => {
   }
 };
 
-const addUser = async (userData, tent_uuid) => {
+const addUser = async (userData, tenant_uuid) => {
   const toastId = toast.loading("Creating user...");
   const body = {
     name: userData?.name,
@@ -41,7 +41,7 @@ const addUser = async (userData, tent_uuid) => {
 
   try {
     const res = await axiosInstance.post(
-      `/api/account/users/${tent_uuid}`,
+      `/api/account/users/${tenant_uuid}`,
       body
     );
     if (res.status === 201) {
@@ -74,7 +74,7 @@ const updateUser = async (userData) => {
 
   try {
     const res = await axiosInstance.put(
-      `/api/account/users/${userData?.user_uuid}`,
+      `/api/account/users/${userData?.tenant_user_uuid}`,
       body
     );
     toast.success("User updated successfully!", { id: toastId });
@@ -115,7 +115,7 @@ export default function UsersPage() {
 
   const loadRoles = async () => {
     try {
-      // const response = await rolesApi.getRoles(tentDetails?.tent_uuid, {
+      // const response = await rolesApi.getRoles(tentDetails?.tenant_uuid, {
       //   status: "active",
       // });
       // setRoles(response.data);
@@ -125,21 +125,21 @@ export default function UsersPage() {
   };
 
   useEffect(() => {
-    if (tentDetails?.tent_uuid) {
+    if (tentDetails?.tenant_uuid) {
       loadRoles();
     }
-  }, [tentDetails?.tent_uuid]);
+  }, [tentDetails?.tenant_uuid]);
 
   useEffect(() => {
-    if (tentDetails?.tent_uuid) {
+    if (tentDetails?.tenant_uuid) {
       loadUsers();
     }
-  }, [tentDetails?.tent_uuid]);
+  }, [tentDetails?.tenant_uuid]);
 
   const loadUsers = async () => {
     try {
       setLoading(true);
-      const data = await fetchUsers(tentDetails?.tent_uuid);
+      const data = await fetchUsers(tentDetails?.tenant_uuid);
       setUsers(data);
     } catch (error) {
       console.error("Failed to fetch users:", error);
@@ -150,7 +150,7 @@ export default function UsersPage() {
 
   const handleAddUser = async (newUserData) => {
     try {
-      const newUser = await addUser(newUserData, tentDetails?.tent_uuid);
+      const newUser = await addUser(newUserData, tentDetails?.tenant_uuid);
       if (!newUser) return { success: false };
       setUsers((prevUsers) => [...prevUsers, newUser?.user]);
       setIsAddDialogOpen(false);

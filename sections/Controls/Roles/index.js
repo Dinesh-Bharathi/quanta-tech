@@ -83,7 +83,7 @@ const Roles = () => {
     setTableLoading(true);
 
     try {
-      const res = await ControlsApi.tenantRoles(tentDetails?.tent_uuid);
+      const res = await ControlsApi.tenantRoles(tentDetails?.tenant_uuid);
       const decrypted = decryption(res?.data?.data);
 
       const data = decrypted?.data ?? [];
@@ -95,11 +95,11 @@ const Roles = () => {
       setLoading(false);
       setTableLoading(false);
     }
-  }, [tentDetails?.tent_uuid]);
+  }, [tentDetails?.tenant_uuid]);
 
   useEffect(() => {
-    if (tentDetails?.tent_uuid) getTenantRoles();
-  }, [tentDetails?.tent_uuid, getTenantRoles]);
+    if (tentDetails?.tenant_uuid) getTenantRoles();
+  }, [tentDetails?.tenant_uuid, getTenantRoles]);
 
   /* ------------------------------
         DELETE ROLE
@@ -114,7 +114,7 @@ const Roles = () => {
       onConfirm: async () => {
         try {
           const res = await ControlsApi.deleteTenantRole(
-            tentDetails?.tent_uuid,
+            tentDetails?.tenant_uuid,
             role_uuid
           );
 

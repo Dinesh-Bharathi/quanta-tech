@@ -101,7 +101,7 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
       try {
         setLoading(true);
         const response = await ControlsApi.getTenantBranchById(
-          tentDetails?.tent_uuid,
+          tentDetails?.tenant_uuid,
           branchUuid
         );
         // const decrypted = decryption(response?.data?.data);
@@ -129,7 +129,7 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
     };
 
     fetchBranchData();
-  }, [mode, branchUuid, tentDetails?.tent_uuid]);
+  }, [mode, branchUuid, tentDetails?.tenant_uuid]);
 
   // --------------------------------------------------
   // 🚀 Submit Handler
@@ -143,13 +143,13 @@ const AddBranch = ({ mode = "add", branchUuid = null }) => {
 
       if (mode === "edit") {
         await ControlsApi.updateTenantBranch(
-          tentDetails?.tent_uuid,
+          tentDetails?.tenant_uuid,
           branchUuid,
           payload
         );
         toast.success("Branch updated successfully!");
       } else {
-        await ControlsApi.createTenantBranch(tentDetails?.tent_uuid, payload);
+        await ControlsApi.createTenantBranch(tentDetails?.tenant_uuid, payload);
         toast.success("Branch created successfully!");
       }
 

@@ -40,7 +40,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       setLoadingMenus(true);
       try {
         const response = await ControlsApi.tenantSubscribedMenus(
-          tentDetails?.tent_uuid
+          tentDetails?.tenant_uuid
         );
         const decryptRes = decryption(response.data.data);
         const data = decryptRes.data || {
@@ -56,10 +56,10 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       }
     };
 
-    if (tentDetails?.tent_uuid) {
+    if (tentDetails?.tenant_uuid) {
       fetchSubscribedMenus();
     }
-  }, [tentDetails?.tent_uuid]);
+  }, [tentDetails?.tenant_uuid]);
 
   useEffect(() => {
     const fetchEditRolesData = async () => {
@@ -83,7 +83,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
 
   const createFormSchema = () => {
     return z.object({
-      roleName: z
+      role_name: z
         .string()
         .min(2, "Name must be at least 2 characters")
         .max(100, "Name must be less than 100 characters"),
@@ -97,7 +97,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
   const form = useForm({
     resolver: zodResolver(createFormSchema()),
     defaultValues: {
-      roleName: "",
+      role_name: "",
       description: "",
     },
   });
@@ -106,7 +106,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
   useEffect(() => {
     if (mode === "edit" && roleData) {
       form.reset({
-        roleName: roleData.roleName || "",
+        role_name: roleData.role_name || "",
         description: roleData.description || "",
       });
     }
@@ -509,7 +509,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
     try {
       const payload = {
         ...data,
-        tentUuid: tentDetails?.tent_uuid,
+        tenantUuid: tentDetails?.tenant_uuid,
         permissions: menuPermissions,
       };
 
@@ -524,7 +524,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
 
         toast.success(decryptRes?.message || "Success");
       } else {
-        const res = await ControlsApi.addTenantRole(tentDetails?.tent_uuid, {
+        const res = await ControlsApi.addTenantRole(tentDetails?.tenant_uuid, {
           data: body,
         });
 

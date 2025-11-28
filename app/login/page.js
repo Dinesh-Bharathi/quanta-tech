@@ -1,44 +1,35 @@
-import { LoginForm } from "@/sections/Login";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+"use client";
+
 import Image from "next/image";
+import { LoginForm } from "@/sections/Login";
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center  px-4">
-      <Card className="w-full max-w-4xl grid md:grid-cols-2 overflow-hidden">
-        {/* Form Section */}
-        <div className="p-6">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center md:text-left">
-              Sign in
-            </CardTitle>
-            <CardDescription className="text-center md:text-left">
-              Enter your email and password to access your account
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LoginForm />
-          </CardContent>
+    <div className="min-h-screen flex items-center justify-center px-4 bg-muted/30">
+      <div className="w-full max-w-4xl grid md:grid-cols-2 shadow-xl border bg-background rounded-xl overflow-hidden">
+        {/* Left: Form */}
+        <div className="p-8 flex flex-col justify-center">
+          <h2 className="text-3xl font-semibold text-center md:text-left">
+            Welcome Back
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1 mb-6 text-center md:text-left">
+            Sign in to continue to your workspace
+          </p>
+
+          <LoginForm />
         </div>
 
-        {/* Side Image for md+ only */}
+        {/* Right side visual */}
         <div className="hidden md:block relative bg-muted">
           <Image
             src="/placeholder.svg"
             alt="Login Illustration"
             fill
-            className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.5] dark:grayscale"
-            sizes="(min-width: 768px) 50vw, 100vw"
+            className="absolute inset-0 object-cover dark:brightness-[0.5] dark:grayscale"
             priority
           />
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

@@ -18,7 +18,7 @@ export function DeleteUserDialog({ user, open, onOpenChange, onDeleteUser }) {
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const result = await onDeleteUser(user?.user_uuid);
+      const result = await onDeleteUser(user?.tenant_user_uuid);
       if (result.success) {
         onOpenChange(false);
       }

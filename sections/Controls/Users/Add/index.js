@@ -128,7 +128,7 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const res = await ControlsApi.tenantRoles(tentDetails?.tent_uuid);
+        const res = await ControlsApi.tenantRoles(tentDetails?.tenant_uuid);
         const decryptRes = decryption(res?.data?.data);
         setRoles(decryptRes?.data || []);
       } catch (err) {
@@ -136,8 +136,8 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
         toast.error("Failed to load available roles");
       }
     };
-    if (tentDetails?.tent_uuid) fetchRoles();
-  }, [tentDetails?.tent_uuid]);
+    if (tentDetails?.tenant_uuid) fetchRoles();
+  }, [tentDetails?.tenant_uuid]);
 
   // 🧠 Populate data when editing
   useEffect(() => {
@@ -275,7 +275,7 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
     if (field === "role_uuid") {
       const isAccountWide = isAccountWideRole(value);
       if (isAccountWide) {
-        newAssignments[index].branch_uuid = "";
+        newAssignments[index].branch_uuid = null;
       }
     }
 
@@ -329,7 +329,7 @@ const AddUser = ({ mode = "add", userUuid, userData }) => {
         await ControlsApi.updateTenantUser(userUuid, payload);
         toast.success("User updated successfully");
       } else {
-        await ControlsApi.createTenantUser(tentDetails?.tent_uuid, payload);
+        await ControlsApi.createTenantUser(tentDetails?.tenant_uuid, payload);
         toast.success("User created successfully");
       }
 

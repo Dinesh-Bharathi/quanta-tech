@@ -11,6 +11,7 @@ import {
 } from "@/lib/theme-utils";
 import { toast } from "sonner";
 import { Loader2, Palette } from "lucide-react";
+import Loading from "@/app/loading";
 
 const ThemeCustomizationContext = createContext({});
 
@@ -105,9 +106,10 @@ export function ThemeCustomizationProvider({ children }) {
         }}
       >
         {/* Simple loading state that matches theme immediately */}
-        <div className="fixed inset-0 flex items-center justify-center">
+        {/* <div className="fixed inset-0 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin mr-2 text-primary" />
-        </div>
+        </div> */}
+        <Loading />
       </div>
     );
   }

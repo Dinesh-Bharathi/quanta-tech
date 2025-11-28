@@ -36,7 +36,7 @@ const Onboarding = () => {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
 
-  const userUuid = searchParams.get("user_uuid");
+  const userUuid = searchParams.get("tenant_user_uuid");
 
   const form = useForm({
     resolver: zodResolver(orgSchema),
@@ -61,12 +61,12 @@ const Onboarding = () => {
     if (!userUuid) return;
 
     const payload = {
-      tent_name: data.organizationName,
-      tent_registration_number: data.registrationNumber,
-      tent_address1: data.address1,
-      tent_address2: data.address2 || "",
-      tent_state: data.state,
-      tent_country: data.country,
+      tenant_name: data.organizationName,
+      tenant_registration_number: data.registrationNumber,
+      tenant_address1: data.address1,
+      tenant_address2: data.address2 || "",
+      tenant_state: data.state,
+      tenant_country: data.country,
     };
 
     try {

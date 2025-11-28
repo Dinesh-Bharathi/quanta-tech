@@ -46,10 +46,9 @@ const SignupForm = () => {
   const [timer, setTimer] = useState(60);
   const [isLoading, setIsLoading] = useState(false);
 
-
   //  Signup handler
   const onSubmit = async (data) => {
-     setIsLoading(true);
+    setIsLoading(true);
     try {
       const body = {
         user_name: data.username,
@@ -59,7 +58,7 @@ const SignupForm = () => {
 
       const response = await AuthApi.signupUser(body);
 
-      if (response.status === 200) {
+      if (response.status) {
         toast.success(
           response.data?.message ||
             "Signup successful! Please verify your email."
@@ -175,20 +174,20 @@ const SignupForm = () => {
           </div>
 
           {/* Submit */}
-           <Button
-        type="submit"
-        className="w-full flex items-center justify-center"
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <>
-            <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary-foreground" />
-            Signing up...
-          </>
-        ) : (
-          "Sign Up"
-        )}
-      </Button>
+          <Button
+            type="submit"
+            className="w-full flex items-center justify-center"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary-foreground" />
+                Signing up...
+              </>
+            ) : (
+              "Sign Up"
+            )}
+          </Button>
 
           {/* Divider */}
           <div className="relative">
@@ -230,7 +229,7 @@ const SignupForm = () => {
                   fill="#EA4335"
                 />
               </svg>
-              Google
+              Signup with Google
             </Button>
 
             <div className="text-center text-sm">
@@ -280,43 +279,45 @@ const SignupForm = () => {
         //  <Loader2 className="h-4 w-4 animate-spin mr-1 text-primary" />
         //      Hang tight-Waiting for verification...
         //    </div>
-          
+
         // </div> // for light color
         <div className="text-center max-w-sm mx-auto mt-10 p-6 border rounded-xl shadow-md bg-gray-900 animate-fadeIn">
-  <MailCheck className="mx-auto mb-4 h-10 w-10 text-primary animate-bounce" />
+          <MailCheck className="mx-auto mb-4 h-10 w-10 text-primary animate-bounce" />
 
-  <p className="text-sm mb-2 text-gray-300">
-    Verification link sent to <span className="font-medium text-white">{email}</span>.
-  </p>
-  <p className="text-sm mb-6 text-gray-400">Please check your inbox to activate your account.</p>
+          <p className="text-sm mb-2 text-gray-300">
+            Verification link sent to{" "}
+            <span className="font-medium text-white">{email}</span>.
+          </p>
+          <p className="text-sm mb-6 text-gray-400">
+            Please check your inbox to activate your account.
+          </p>
 
-  <Button
-    onClick={handleResend}
-    variant="outline"
-    className={`flex items-center justify-center mx-auto transition-all duration-200 ${
-      timer > 0 || isResending
-        ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed"
-        : ""
-    }`}
-    disabled={isResending || timer > 0}
-  >
-    <RefreshCcw className="h-4 w-4 mr-2" />
-    {isResending ? "Resending..." : "Resend Email"}
-  </Button>
+          <Button
+            onClick={handleResend}
+            variant="outline"
+            className={`flex items-center justify-center mx-auto transition-all duration-200 ${
+              timer > 0 || isResending
+                ? "bg-gray-800 text-gray-500 border border-gray-700 cursor-not-allowed"
+                : ""
+            }`}
+            disabled={isResending || timer > 0}
+          >
+            <RefreshCcw className="h-4 w-4 mr-2" />
+            {isResending ? "Resending..." : "Resend Email"}
+          </Button>
 
-  {timer > 0 && (
-    <div className="flex items-center justify-center mt-3 text-sm text-gray-400">
-      <Clock className="h-4 w-4 mr-1 text-primary animate-pulse" />
-      <span>You can resend in {timer}s</span>
-    </div>
-  )}
+          {timer > 0 && (
+            <div className="flex items-center justify-center mt-3 text-sm text-gray-400">
+              <Clock className="h-4 w-4 mr-1 text-primary animate-pulse" />
+              <span>You can resend in {timer}s</span>
+            </div>
+          )}
 
-  <div className="flex justify-center mt-5 text-gray-500 text-xs">
-    <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary ml-2" />
-    <span>Hang tight — we’re waiting for your verification...</span>
-  </div>
-</div>
-
+          <div className="flex justify-center mt-5 text-gray-500 text-xs">
+            <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary ml-2" />
+            <span>Hang tight — we’re waiting for your verification...</span>
+          </div>
+        </div>
       )}
     </div>
   );

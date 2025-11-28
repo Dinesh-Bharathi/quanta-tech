@@ -318,7 +318,7 @@ function ProfileEditForm({ profile, onUpdateProfile, isLoading }) {
     setMessage(null);
     try {
       const body = encryption(data);
-      await ProfileApi.updateProfile({ data: body }, profile?.user_uuid);
+      await ProfileApi.updateProfile({ data: body }, profile?.tenant_user_uuid);
       setMessage({ type: "success", text: "Profile updated successfully!" });
       onUpdateProfile({ ...profile, ...data });
     } catch (error) {
@@ -741,8 +741,10 @@ export default function ProfilePage() {
   useEffect(() => {
     const loadProfile = async () => {
       try {
-        if (!profile?.user_uuid) return;
-        const profileData = await ProfileApi.getProfile(profile?.user_uuid);
+        if (!profile?.tenant_user_uuid) return;
+        const profileData = await ProfileApi.getProfile(
+          profile?.tenant_user_uuid
+        );
         const data = decryption(profileData?.data?.data);
         setProfile(data);
       } catch (error) {
@@ -753,7 +755,7 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [profile?.user_uuid, setProfile]);
+  }, [profile?.tenant_user_uuid, setProfile]);
 
   return (
     <div className="space-y-8">

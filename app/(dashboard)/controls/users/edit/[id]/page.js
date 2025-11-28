@@ -4,7 +4,7 @@ export default async function EditUserPage({ params }) {
   const { id } = await params;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/controls/tenant/user/${id}`,
+    `${process.env.NEXT_PUBLIC_API_URL}/users/tenant/user/${id}`,
     {
       cache: "no-store",
     }

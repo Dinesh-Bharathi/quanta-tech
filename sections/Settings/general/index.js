@@ -192,7 +192,9 @@ export function GeneralSettings() {
       setIsLoading(true);
       setError(null);
 
-      const response = await GeneralApi.getTentDetails(tentDetails?.tent_uuid);
+      const response = await GeneralApi.getTentDetails(
+        tentDetails?.tenant_uuid
+      );
 
       const successdata = decryption(response.data?.data);
 
@@ -203,16 +205,16 @@ export function GeneralSettings() {
       }
 
       const data = {
-        organizationName: successdata.tent_name || "",
+        organizationName: successdata.tenant_name || "",
         description: successdata.tent_description || "",
-        email: successdata.tent_email || "",
-        contact: successdata.tent_phone || "",
+        email: successdata.tenant_email || "",
+        contact: successdata.tenant_phone || "",
         registrationNumber: successdata.tent_gst_no || "",
-        streetAddress: successdata.tent_address1 || "",
-        city: successdata.tent_address2 || "",
-        state: successdata.tent_state || "",
-        country: successdata.tent_country || "",
-        pincode: successdata.tent_postalcode || "",
+        streetAddress: successdata.tenant_address1 || "",
+        city: successdata.tenant_address2 || "",
+        state: successdata.tenant_state || "",
+        country: successdata.tenant_country || "",
+        pincode: successdata.tenant_postalcode || "",
         website: successdata.tent_web || "",
         facebook: successdata.tent_facebook || "",
         instagram: successdata.tent_insta || "",
@@ -234,12 +236,12 @@ export function GeneralSettings() {
 
   // Fetch data on component mount
   useEffect(() => {
-    if (tentDetails?.tent_uuid) {
+    if (tentDetails?.tenant_uuid) {
       setIsLoading(true);
       setError(null);
       fetchOrganizationData();
     }
-  }, [tentDetails?.tent_uuid]);
+  }, [tentDetails?.tenant_uuid]);
 
   const onSubmit = async (data) => {
     try {
@@ -247,15 +249,15 @@ export function GeneralSettings() {
 
       // Transform form data to API format
       const payload = {
-        tent_name: data.organizationName,
+        tenant_name: data.organizationName,
         tent_description: data.description,
-        tent_email: data.email,
+        tenant_email: data.email,
         tent_phone_no: data.contact,
         tent_gst_no: data.registrationNumber,
         tent_street: data.streetAddress,
         tent_city: data.city,
-        tent_state: data.state,
-        tent_country: data.country,
+        tenant_state: data.state,
+        tenant_country: data.country,
         tent_pincode: data.pincode,
         tent_web: data.website || null,
         tent_facebook: data.facebook || null,
@@ -268,7 +270,7 @@ export function GeneralSettings() {
 
       // PUT request with axios instance
       const response = await axiosInstance.put(
-        `/api/account/tent-details/${tentDetails?.tent_uuid}`,
+        `/api/account/tent-details/${tentDetails?.tenant_uuid}`,
         { data: reqBody }
       );
 

@@ -19,6 +19,7 @@ import Loading from "@/app/loading";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const [tenantSelectionList, setTenantSelectionList] = useState([]);
   const [user, setUser] = useState(null);
   const [tentDetails, setTentDetails] = useState(null);
   const [currentBranch, setCurrentBranch] = useState(null);
@@ -143,40 +144,86 @@ export const AuthProvider = ({ children }) => {
     [user, permissions, getAccessibleBranchUuids]
   );
 
-  // ✅ LOGIN
-  const login = useCallback(
-    async (credentials) => {
-      const toastId = toast.loading("Logging in...");
+  // ✅ LOGIN (Step 1: Email/Password)
+  const login = useCallback(async (credentials) => {
+    try {
+      const body = encryption(credentials);
+      const response = await AuthApi.loginUser({ data: body });
 
-      try {
-        const body = encryption(credentials);
-        const response = await AuthApi.loginUser({ data: body });
+      if (response.status === 200) {
+        const data = decryption(response.data?.data);
 
-        if (response.status === 200) {
-          await fetchSession(); // get user info post-login
-          toast.success("Login successful", { id: toastId });
+        if (!data?.data) {
+          toast.error("Invalid response from server");
+          return false;
+        }
 
-          const data = decryption(response.data?.data);
+        const { tenants, global_session_uuid } = data.data;
 
-          const redirectPath = searchParams.get("redirect") || "/accesscheck";
-          router.push(redirectPath);
+        // Case 1: Multiple tenants - return data for selection
+        if (tenants && tenants.length > 1) {
+          // return {
+          //   tenants,
+          //   global_session_uuid,
+          // };
+          setTenantSelectionList(tenants);
+          router.push(
+            `/tenant-select?global_session_uuid=${global_session_uuid}`
+          );
           return true;
         }
 
-        toast.error("Login failed", { id: toastId });
-        return false;
-      } catch (err) {
-        console.error("Login error:", err);
-        const errorMessage =
-          err.response?.data?.message || "Invalid credentials";
-        toast.error(errorMessage.replace(/tenant/gi, "Account"), {
-          id: toastId,
-        });
+        // Case 2: Single tenant - auto login
+        if (tenants && tenants.length === 1) {
+          const success = await loginToTenant({
+            global_session_uuid,
+            tenant_user_uuid: tenants[0].tenant_user_uuid,
+          });
+          return success;
+        }
+
+        // Case 3: No tenants
+        toast.error("No accounts found for this user");
         return false;
       }
-    },
-    [router, searchParams]
-  );
+
+      toast.error("Login failed. Please check your credentials.");
+      return false;
+    } catch (err) {
+      console.error("Login error:", err);
+      const errorMessage =
+        err.response?.data?.message || "Invalid credentials. Please try again.";
+      toast.error(errorMessage.replace(/tenant/gi, "Account"));
+      return false;
+    }
+  }, []);
+
+  // ✅ LOGIN TO TENANT (Step 2: Tenant Selection)
+  const loginToTenant = useCallback(async (body) => {
+    const toastId = toast.loading("Logging in to account...");
+
+    try {
+      const response = await AuthApi.loginTenantUser(body);
+
+      if (response.status === 200) {
+        // Fetch session after successful tenant login
+        router.push("/accesscheck");
+        toast.success("Login successful", { id: toastId });
+        fetchSession();
+        return true;
+      }
+
+      toast.error("Failed to login to account", { id: toastId });
+      return false;
+    } catch (error) {
+      console.error("Tenant login error:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        "Failed to login to account. Please try again.";
+      toast.error(errorMessage.replace(/tenant/gi, "Account"), { id: toastId });
+      return false;
+    }
+  }, []);
 
   // ✅ FETCH SESSION
   const fetchSession = useCallback(async () => {
@@ -268,7 +315,9 @@ export const AuthProvider = ({ children }) => {
         router.replace(redirectPath);
       }
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 500);
     }
   }, [
     router,
@@ -367,12 +416,13 @@ export const AuthProvider = ({ children }) => {
 
         // Auth Functions
         login,
+        tenantSelectionList,
+        setTenantSelectionList,
+        loginToTenant,
         logout,
         fetchSession,
 
-        // Branch and switch
-        currentBranch,
-        setCurrentBranch,
+        // Subscription
         subscriptionDetails,
         isAccountSuspended,
       }}

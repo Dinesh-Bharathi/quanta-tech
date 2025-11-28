@@ -4,26 +4,26 @@ import axiosInstance from "@/services/network/index";
 
 export default {
   // DynamicMenu
-  tenantSubscribedMenus: async (tentUuid) => {
+  tenantSubscribedMenus: async (tenantUuid) => {
     const endpoint = API_ENDPOINTS.GET_SUBSCRIBED_MENUS.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.get(endpoint);
   },
 
   // Roles
-  tenantRoles: async (tentUuid) => {
+  tenantRoles: async (tenantUuid) => {
     const endpoint = API_ENDPOINTS.GET_TENT_ROLES.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.get(endpoint);
   },
-  addTenantRole: async (tentUuid, data) => {
+  addTenantRole: async (tenantUuid, data) => {
     const endpoint = API_ENDPOINTS.ADD_TENANT_ROLE.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.post(endpoint, data);
   },
@@ -41,27 +41,27 @@ export default {
     );
     return await axiosInstance.put(endpoint, data);
   },
-  deleteTenantRole: async (tentUuid, roleUuid) => {
+  deleteTenantRole: async (tenantUuid, roleUuid) => {
     const endpoint = API_ENDPOINTS.DELETE_TENANT_ROLE.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     ).replace(":roleUuid", roleUuid);
     return axiosInstance.delete(endpoint);
   },
 
   // Users
-  getTenantUsers: async (tentUuid, params) => {
+  getTenantUsers: async (tenantUuid, params) => {
     const endpoint = API_ENDPOINTS.GET_TENANT_USERS.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.get(endpoint, { params });
   },
 
-  createTenantUser: async (tentUuid, data) => {
+  createTenantUser: async (tenantUuid, data) => {
     const endpoint = API_ENDPOINTS.CREATE_TENANT_USER.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.post(endpoint, data);
   },
@@ -83,39 +83,39 @@ export default {
   },
 
   // Branches
-  getTenantBranches: async (tentUuid) => {
+  getTenantBranches: async (tenantUuid) => {
     const endpoint = API_ENDPOINTS.GET_TENANT_BRANCHES.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.get(endpoint);
   },
-  createTenantBranch: async (tentUuid, data) => {
+  createTenantBranch: async (tenantUuid, data) => {
     const endpoint = API_ENDPOINTS.CREATE_TENANT_BRANCH.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     );
     return await axiosInstance.post(endpoint, data);
   },
-  updateTenantBranch: async (tentUuid, branchUuid, data) => {
-    // const endpoint = `/branches/${tentUuid}/${branchUuid}`;
+  updateTenantBranch: async (tenantUuid, branchUuid, data) => {
+    // const endpoint = `/branches/${tenantUuid}/${branchUuid}`;
     const endpoint = API_ENDPOINTS.UPDATE_TENANT_BRANCH.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     ).replace(":branchUuid", branchUuid);
     return await axiosInstance.put(endpoint, data);
   },
-  getTenantBranchById: async (tentUuid, branchUuid) => {
+  getTenantBranchById: async (tenantUuid, branchUuid) => {
     const endpoint = API_ENDPOINTS.UPDATE_TENANT_BRANCH.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     ).replace(":branchUuid", branchUuid);
     return await axiosInstance.get(endpoint);
   },
-  deleteTenantBranch: async (tentUuid, branchUuid) => {
+  deleteTenantBranch: async (tenantUuid, branchUuid) => {
     const endpoint = API_ENDPOINTS.DELETE_TENANT_BRANCH.replace(
-      ":tentUuid",
-      tentUuid
+      ":tenantUuid",
+      tenantUuid
     ).replace(":branchUuid", branchUuid);
     return await axiosInstance.delete(endpoint);
   },

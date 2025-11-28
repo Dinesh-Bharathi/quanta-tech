@@ -91,7 +91,7 @@ const Users = () => {
     setDataTableLoading(true);
     try {
       const response = await ControlsApi.getTenantUsers(
-        tentDetails?.tent_uuid,
+        tentDetails?.tenant_uuid,
         { all: false, branchUuid: currentBranch?.branch_uuid }
       );
       setUsersList(response?.data?.data || []);
@@ -102,12 +102,12 @@ const Users = () => {
       setLoading(false);
       setDataTableLoading(false);
     }
-  }, [tentDetails?.tent_uuid, currentBranch?.branch_uuid]);
+  }, [tentDetails?.tenant_uuid, currentBranch?.branch_uuid]);
 
   // 🔹 On mount
   useEffect(() => {
-    if (tentDetails?.tent_uuid) getTenantUsers();
-  }, [tentDetails?.tent_uuid, getTenantUsers]);
+    if (tentDetails?.tenant_uuid) getTenantUsers();
+  }, [tentDetails?.tenant_uuid, getTenantUsers]);
 
   // 🔹 Sync filtered data
   useEffect(() => {
@@ -115,7 +115,7 @@ const Users = () => {
   }, [usersList]);
 
   // 🔹 Delete user
-  const handleDeleteUser = async (user_uuid, user_name) => {
+  const handleDeleteUser = async (tenant_user_uuid, user_name) => {
     await showConfirmation({
       title: "Delete User",
       message: `Are you sure you want to delete "${user_name}"? This action cannot be undone.`,
@@ -124,7 +124,7 @@ const Users = () => {
       isDangerous: true,
       onConfirm: async () => {
         try {
-          await ControlsApi.deleteTenantUser(user_uuid);
+          await ControlsApi.deleteTenantUser(tenant_user_uuid);
           toast.success("User deleted successfully");
           getTenantUsers();
         } catch (err) {
@@ -380,7 +380,7 @@ const Users = () => {
               <PermissionGuard permission="update">
                 <DropdownMenuItem
                   onClick={() =>
-                    router.push(`/controls/users/edit/${user.user_uuid}`)
+                    router.push(`/controls/users/edit/${user.tenant_user_uuid}`)
                   }
                 >
                   <Edit className="mr-2 h-4 w-4" />
@@ -392,7 +392,7 @@ const Users = () => {
                   className="text-destructive"
                   disabled={isOwner}
                   onClick={() =>
-                    handleDeleteUser(user.user_uuid, user.user_name)
+                    handleDeleteUser(user.tenant_user_uuid, user.user_name)
                   }
                 >
                   <Trash2 className="mr-2 h-4 w-4" />

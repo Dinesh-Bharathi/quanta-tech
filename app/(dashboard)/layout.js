@@ -39,9 +39,9 @@ export default function DashboardLayout({ children }) {
             {children}
           </PermissionGuard>
         </main>
-        {layoutConfig.footerVisible && tentDetails?.tent_name && (
+        {layoutConfig.footerVisible && tentDetails?.tenant_name && (
           <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {tentDetails?.tent_name}. All rights
+            © {new Date().getFullYear()} {tentDetails?.tenant_name}. All rights
             reserved.
           </footer>
         )}
@@ -83,10 +83,10 @@ export default function DashboardLayout({ children }) {
               {children}
             </PermissionGuard>
           </main>
-          {layoutConfig.footerVisible && tentDetails?.tent_name && (
+          {layoutConfig.footerVisible && tentDetails?.tenant_name && (
             <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {tentDetails?.tent_name}. All rights
-              reserved.
+              © {new Date().getFullYear()} {tentDetails?.tenant_name}. All
+              rights reserved.
             </footer>
           )}
         </div>
@@ -129,9 +129,9 @@ export default function DashboardLayout({ children }) {
             {children}
           </PermissionGuard>
         </main>
-        {layoutConfig.footerVisible && tentDetails?.tent_name && (
+        {layoutConfig.footerVisible && tentDetails?.tenant_name && (
           <footer className="border-t p-4 text-center text-sm text-muted-foreground">
-            © {new Date().getFullYear()} {tentDetails?.tent_name}. All rights
+            © {new Date().getFullYear()} {tentDetails?.tenant_name}. All rights
             reserved.
           </footer>
         )}

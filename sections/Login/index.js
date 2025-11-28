@@ -1,77 +1,68 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+
 import { useAuth } from "@/context/AuthContext";
-import { useLookup } from "@/context/LookupContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { API_ENDPOINTS } from "@/constants";
 
-// Zod Schema
-const loginSchema = z.object({
-  email: z.string().email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(6, { message: "Password must be at least 6 characters" }),
+// Validation schema
+const schema = z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Minimum 6 characters required"),
 });
 
 export function LoginForm() {
   const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    mode: "onBlur",
-    reValidateMode: "onChange",
-    criteriaMode: "all",
-    shouldFocusError: true,
-    shouldUnregister: true,
-    shouldUseNativeValidation: false,
-    delayError: 0,
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
   });
 
-  const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
   const onSubmit = async (data) => {
-    setIsLoading(true);
-
+    setLoading(true);
     try {
       await login(data);
     } catch (err) {
-      console.error(err.message || "Login failed");
+      console.error("Login error", err?.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  const googleLogin = () => {
+    const APIURL = process.env.NEXT_PUBLIC_API_URL;
+    const url = APIURL + API_ENDPOINTS.GOOGLE_LOGIN;
+    window.location.href = url;
+  };
+
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="space-y-6">
+      {/* Login Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Email */}
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label>Email</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="you@example.com"
               className="pl-10"
               {...register("email")}
             />
@@ -83,43 +74,41 @@ export function LoginForm() {
 
         {/* Password */}
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <Label>Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="Enter your password"
+              placeholder="••••••••"
               className="pl-10 pr-10"
               {...register("password")}
             />
-            <Button
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+              className="absolute right-3 top-2.5 text-muted-foreground"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? (
-                <EyeOff className="h-4 w-4 text-muted-foreground" />
+                <EyeOff className="h-4 w-4" />
               ) : (
-                <Eye className="h-4 w-4 text-muted-foreground" />
+                <Eye className="h-4 w-4" />
               )}
-            </Button>
+            </button>
           </div>
           {errors.password && (
             <p className="text-sm text-red-600">{errors.password.message}</p>
           )}
         </div>
 
-        {/* Remember me + Forgot password */}
+        {/* Remember + Forgot */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Checkbox id="remember" />
             <Label htmlFor="remember" className="text-sm">
               Remember me
             </Label>
           </div>
+
           <Link
             href="/forgot-password"
             className="text-sm text-primary hover:underline"
@@ -128,14 +117,15 @@ export function LoginForm() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? (
+        {/* Submit */}
+        <Button type="submit" className="w-full h-11" disabled={loading}>
+          {loading ? (
             <>
-              <Loader2 className="h-4 w-4 animate-spin mr-2 text-primary-foreground" />
+              <Loader2 className="h-4 w-4 animate-spin mr-2" />
               Signing in...
             </>
           ) : (
-            "Sign in"
+            "Sign In"
           )}
         </Button>
       </form>
@@ -147,51 +137,45 @@ export function LoginForm() {
         </div>
         <div className="relative flex justify-center text-xs uppercase">
           <span className="bg-background px-2 text-muted-foreground">
-            Or continue with
+            or continue with
           </span>
         </div>
       </div>
 
-      {/* Social login placeholder */}
-      <div className="grid grid-cols-1 gap-4">
-        <Button
-          variant="outline"
-          onClick={() => {
-            const APIURL = process.env.NEXT_PUBLIC_API_URL;
-            const signupUrl = APIURL.concat(API_ENDPOINTS.GOOGLE_LOGIN);
-            window.open(signupUrl.toString(), "_self");
-          }}
-        >
-          <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-            {/* Google SVG */}
-            <path
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-              fill="#4285F4"
-            />
-            <path
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-              fill="#34A853"
-            />
-            <path
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-              fill="#FBBC05"
-            />
-            <path
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-              fill="#EA4335"
-            />
-          </svg>
-          Google
-        </Button>
-      </div>
+      {/* Google Button */}
+      <Button
+        variant="outline"
+        className="w-full h-11 flex items-center justify-center gap-2"
+        onClick={googleLogin}
+      >
+        <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
+          <path
+            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+            fill="#4285F4"
+          />
+          <path
+            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+            fill="#34A853"
+          />
+          <path
+            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+            fill="#FBBC05"
+          />
+          <path
+            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+            fill="#EA4335"
+          />
+        </svg>
+        Continue with Google
+      </Button>
 
       {/* Footer */}
-      <div className="text-center text-sm">
-        Don&apos;t have an account?{" "}
+      <p className="text-center text-sm text-muted-foreground">
+        Don’t have an account?{" "}
         <Link href="/signup" className="text-primary hover:underline">
           Sign up
         </Link>
-      </div>
+      </p>
     </div>
   );
 }

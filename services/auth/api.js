@@ -5,7 +5,17 @@ import axiosInstance from "../network";
 
 export default {
   loginUser: async (credentials) => {
-    return await axiosInstance.post(API_ENDPOINTS.LOGIN, credentials);
+    return await axiosInstance.post(API_ENDPOINTS.LOGIN_ONE, credentials);
+  },
+  loginTenantUser: async (credentials) => {
+    return await axiosInstance.post(API_ENDPOINTS.LOGIN_TWO, credentials);
+  },
+  getTenantSelectionList: async (globalSessionUuid) => {
+    const endpoint = API_ENDPOINTS.TENANT_SELECTION.replace(
+      ":globalSessionUuid",
+      globalSessionUuid
+    );
+    return await axiosInstance.get(endpoint);
   },
   getSession: async () => {
     return await axiosInstance.get(API_ENDPOINTS.SESSION);
@@ -42,10 +52,16 @@ export default {
     );
     return await axiosInstance.post(endpoint, payload);
   },
-  forgotPassword: async (payload) => {
+  getTenantsForEmail: async (payload) => {
+    return await axiosInstance.post(
+      API_ENDPOINTS.FORGOT_PASSWORD_TENANTS,
+      payload
+    );
+  },
+  sendPasswordResetForTenant: async (payload) => {
     return await axiosInstance.post(API_ENDPOINTS.FORGOT_PASSWORD, payload);
   },
-  verifyRestPassToken: async (params) => {
+  verifyResetPassToken: async (params) => {
     return await axiosInstance.get(API_ENDPOINTS.VERIFY_FORGOT_PASSWORD, {
       params,
     });
