@@ -1,9 +1,10 @@
 export const API_ENDPOINTS = {
   LOGIN_ONE: "/auth/login/step1",
   LOGIN_TWO: "/auth/login/step2",
-  TENANT_SELECTION: "/auth/tenant-select/:globalSessionUuid",
+  TENANT_SELECTION: "/auth/tenant-select",
   SESSION: "/auth/tenant/session",
-  LOGOUT: "/auth/logout",
+  LOGOUT_TENANT: "/auth/logout",
+  LOGOUT_SESSION: "/auth/logout/session",
   GOOGLE_LOGIN: "/auth/google/login",
   GOOGLE_SIGNUP: "/auth/google/signup",
   SIGNUP: "/auth/signup",

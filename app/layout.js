@@ -38,7 +38,7 @@ export default function RootLayout({ children }) {
                       <Toaster
                         toastOptions={{ className: "sonner-toast" }}
                         position="bottom-right"
-                        duration={2000}
+                        duration={5000}
                         richColors
                         closeButton
                       />

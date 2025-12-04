@@ -88,7 +88,7 @@ function Page() {
 
       if (res.data.success) {
         setSuccess(true);
-        setTimeout(() => router.push("/login"), 2500);
+        setTimeout(() => router.replace("/login"), 2500);
       } else {
         setError(res.data.message);
       }
@@ -151,7 +151,7 @@ function Page() {
 
             <Separator />
 
-            <Button className="w-full" onClick={() => router.push("/login")}>
+            <Button className="w-full" onClick={() => router.replace("/login")}>
               Go to Login
             </Button>
           </CardContent>
@@ -227,8 +227,7 @@ function Page() {
           <div className="rounded-lg bg-muted px-4 py-3 flex gap-3 text-sm">
             <ShieldCheck className="w-4 h-4 mt-0.5" />
             <p className="text-muted-foreground">
-              For security reasons, this password applies only to this tenant
-              account.
+              For security reasons, this password applies only to this account.
             </p>
           </div>
         </CardContent>

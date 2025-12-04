@@ -22,6 +22,9 @@ import { API_ENDPOINTS } from "@/constants";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import AuthApi from "@/services/auth/api";
+import { useRouter } from "next/navigation";
+import { errorResponse, successResponse } from "@/lib/response";
+import { encryption } from "@/lib/encryption";
 
 //  Validation
 const formSchema = z.object({
@@ -31,6 +34,7 @@ const formSchema = z.object({
 });
 
 const SignupForm = () => {
+  const router = useRouter();
   const {
     register,
     handleSubmit,
@@ -56,22 +60,26 @@ const SignupForm = () => {
         password: data.password,
       };
 
-      const response = await AuthApi.signupUser(body);
+      const encryptData = encryption(body);
 
-      if (response.status) {
+      const res = await AuthApi.signupUser({ data: encryptData });
+
+      const resData = successResponse(res, true);
+
+      if (resData.success) {
         toast.success(
-          response.data?.message ||
-            "Signup successful! Please verify your email."
+          resData?.message || "Signup successful! Please verify your email."
         );
         setEmailSent(true);
         setEmail(data.email);
+        if (resData?.data?.redirect) router.push(resData?.data?.redirect);
       } else {
-        toast.error(response.data?.message || "Signup failed");
+        toast.error(response?.message || "Signup failed");
       }
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || error?.message || "Signup failed"
-      );
+    } catch (err) {
+      const error = errorResponse(err, true);
+      console.error(error);
+      toast.error(error.message || "Signup failed");
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +91,7 @@ const SignupForm = () => {
     try {
       const res = await AuthApi.resendVerificationEmail({ user_email: email });
       if (res.status === 200) toast.success(res.data?.message);
+      if (res?.data?.data?.redirect) router.push(res?.data?.data?.redirect);
       setTimer(120); //timer
     } catch (error) {
       toast.error(error.response?.data?.message);

@@ -136,7 +136,7 @@ export function DashboardSidebar({
   isCollapseOffcanvas = false,
 }) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logoutTenant } = useAuth();
   const { layoutConfig } = useThemeCustomization();
   const { mainNavigation, footerNavigation, loading, isEmpty } =
     useSidebarNavigation();
@@ -508,7 +508,10 @@ export function DashboardSidebar({
                     Security
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="rounded-lg" onClick={logout}>
+                  <DropdownMenuItem
+                    className="rounded-lg"
+                    onClick={logoutTenant}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Log out
                   </DropdownMenuItem>

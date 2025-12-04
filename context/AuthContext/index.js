@@ -11,15 +11,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
 import AuthApi from "@/services/auth/api";
-import { decryption, encryption } from "@/lib/encryption";
+import { encryption } from "@/lib/encryption";
+import { errorResponse, successResponse } from "@/lib/response";
 import { PUBLIC_ROUTES } from "@/constants";
-import { SubscriptionBanner } from "@/components/dashboard/subscription-banner";
 import Loading from "@/app/loading";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [tenantSelectionList, setTenantSelectionList] = useState([]);
   const [user, setUser] = useState(null);
   const [tentDetails, setTentDetails] = useState(null);
   const [currentBranch, setCurrentBranch] = useState(null);
@@ -149,12 +148,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const body = encryption(credentials);
       const response = await AuthApi.loginUser({ data: body });
+      const data = successResponse(response, true);
 
       if (response.status === 200) {
-        const data = decryption(response.data?.data);
-
         if (!data?.data) {
-          toast.error("Invalid response from server");
+          toast.error(data?.message || "Invalid response from server");
           return false;
         }
 
@@ -166,34 +164,36 @@ export const AuthProvider = ({ children }) => {
           //   tenants,
           //   global_session_uuid,
           // };
-          setTenantSelectionList(tenants);
-          router.push(
-            `/tenant-select?global_session_uuid=${global_session_uuid}`
-          );
+          const redirectPath = searchParams.get("redirect");
+          if (redirectPath) {
+            router.replace(`/tenant-select?redirect=${redirectPath}`);
+          } else {
+            router.push(`/tenant-select`);
+          }
           return true;
         }
 
         // Case 2: Single tenant - auto login
         if (tenants && tenants.length === 1) {
           const success = await loginToTenant({
-            global_session_uuid,
             tenant_user_uuid: tenants[0].tenant_user_uuid,
           });
           return success;
         }
 
         // Case 3: No tenants
-        toast.error("No accounts found for this user");
+        toast.error(data?.message || "No accounts found for this user");
         return false;
       }
 
-      toast.error("Login failed. Please check your credentials.");
+      toast.error(
+        data?.message || "Login failed. Please check your credentials."
+      );
       return false;
     } catch (err) {
-      console.error("Login error:", err);
-      const errorMessage =
-        err.response?.data?.message || "Invalid credentials. Please try again.";
-      toast.error(errorMessage.replace(/tenant/gi, "Account"));
+      const error = errorResponse(err, true);
+      toast.error(error?.message || "Please try again");
+      console.error("Login error", error);
       return false;
     }
   }, []);
@@ -203,24 +203,32 @@ export const AuthProvider = ({ children }) => {
     const toastId = toast.loading("Logging in to account...");
 
     try {
-      const response = await AuthApi.loginTenantUser(body);
+      const encryptedBody = encryption(body);
+      const response = await AuthApi.loginTenantUser({ data: encryptedBody });
+      const data = successResponse(response, true);
 
       if (response.status === 200) {
         // Fetch session after successful tenant login
-        router.push("/accesscheck");
-        toast.success("Login successful", { id: toastId });
+
+        const redirectPath = searchParams.get("redirect");
+        if (redirectPath) {
+          router.replace(`/accesscheck?redirect=${redirectPath}`);
+        } else {
+          router.replace("/accesscheck");
+        }
+        toast.success(data?.message || "Login successful", { id: toastId });
         fetchSession();
         return true;
       }
 
-      toast.error("Failed to login to account", { id: toastId });
+      toast.error(data?.message || "Failed to login to account", {
+        id: toastId,
+      });
       return false;
-    } catch (error) {
+    } catch (err) {
+      const error = errorResponse(err, true);
+      toast.error(error?.message || "Please try again");
       console.error("Tenant login error:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        "Failed to login to account. Please try again.";
-      toast.error(errorMessage.replace(/tenant/gi, "Account"), { id: toastId });
       return false;
     }
   }, []);
@@ -237,7 +245,7 @@ export const AuthProvider = ({ children }) => {
     }
     try {
       const response = await AuthApi.getSession();
-      const data = decryption(response.data?.data);
+      const data = successResponse(response, true);
 
       if (data?.data) {
         const sessionData = data.data;
@@ -329,12 +337,12 @@ export const AuthProvider = ({ children }) => {
   ]);
 
   // ✅ LOGOUT
-  const logout = useCallback(async () => {
+  const logoutTenant = useCallback(async () => {
     const toastId = toast.loading("Logging out...");
     setLoading(true);
 
     try {
-      await AuthApi.logoutUser();
+      await AuthApi.logoutTenantUser();
 
       // Clear all state
       setUser(null);
@@ -351,10 +359,27 @@ export const AuthProvider = ({ children }) => {
       console.error("Logout error:", err);
       toast.error("Logout failed", { id: toastId });
     } finally {
-      router.push("/login");
+      router.push("/tenant-select");
       setLoading(false);
     }
   }, [router, clearBranchPreference]);
+
+  const logoutUser = useCallback(async () => {
+    const toastId = toast.loading("Logging out session...");
+    setLoading(true);
+
+    try {
+      await AuthApi.logoutUser();
+
+      toast.success("Session Logout successful", { id: toastId });
+    } catch (err) {
+      console.error("Logout error:", err);
+      toast.error("Session Logout failed", { id: toastId });
+    } finally {
+      router.replace("/login");
+      setLoading(false);
+    }
+  }, [router]);
 
   // ✅ INIT SESSION ON MOUNT
   useEffect(() => {
@@ -416,10 +441,9 @@ export const AuthProvider = ({ children }) => {
 
         // Auth Functions
         login,
-        tenantSelectionList,
-        setTenantSelectionList,
         loginToTenant,
-        logout,
+        logoutUser,
+        logoutTenant,
         fetchSession,
 
         // Subscription
@@ -427,16 +451,7 @@ export const AuthProvider = ({ children }) => {
         isAccountSuspended,
       }}
     >
-      {loading ? (
-        <Loading />
-      ) : (
-        <>
-          {isAuthenticated && (
-            <SubscriptionBanner subscriptionData={subscriptionDetails} />
-          )}
-          {children}
-        </>
-      )}
+      {loading ? <Loading /> : <>{children}</>}
     </AuthContext.Provider>
   );
 };

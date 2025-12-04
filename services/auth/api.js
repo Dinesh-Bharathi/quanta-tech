@@ -10,18 +10,17 @@ export default {
   loginTenantUser: async (credentials) => {
     return await axiosInstance.post(API_ENDPOINTS.LOGIN_TWO, credentials);
   },
-  getTenantSelectionList: async (globalSessionUuid) => {
-    const endpoint = API_ENDPOINTS.TENANT_SELECTION.replace(
-      ":globalSessionUuid",
-      globalSessionUuid
-    );
-    return await axiosInstance.get(endpoint);
+  getTenantSelectionList: async () => {
+    return await axiosInstance.get(API_ENDPOINTS.TENANT_SELECTION);
   },
   getSession: async () => {
     return await axiosInstance.get(API_ENDPOINTS.SESSION);
   },
   logoutUser: async () => {
-    return await axiosInstance.post(API_ENDPOINTS.LOGOUT);
+    return await axiosInstance.post(API_ENDPOINTS.LOGOUT_SESSION);
+  },
+  logoutTenantUser: async () => {
+    return await axiosInstance.post(API_ENDPOINTS.LOGOUT_TENANT);
   },
   getUserNavMenus: async (userUuid, branchUuid) => {
     const endpoint = API_ENDPOINTS.USER_NAV_MENUS.replace(

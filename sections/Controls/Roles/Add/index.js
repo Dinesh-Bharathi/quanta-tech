@@ -20,9 +20,10 @@ import { MenuItemCard } from "./MenuItemCard";
 import { ArrowLeft, Save } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ControlsApi from "@/services/controls/api";
-import { decryption, encryption } from "@/lib/encryption";
+import { encryption } from "@/lib/encryption";
 import { toast } from "sonner";
 import Loading from "@/app/(dashboard)/loading";
+import { errorResponse, successResponse } from "@/lib/response";
 
 const RolesAdd = ({ mode = "add", roleUuid }) => {
   const { user, tentDetails } = useAuth();
@@ -42,7 +43,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
         const response = await ControlsApi.tenantSubscribedMenus(
           tentDetails?.tenant_uuid
         );
-        const decryptRes = decryption(response.data.data);
+        const decryptRes = successResponse(response, true);
         const data = decryptRes.data || {
           mainNavigation: [],
           footerNavigation: [],
@@ -50,7 +51,9 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
         setMainNavigation(data.mainNavigation);
         setFooterNavigation(data.footerNavigation);
       } catch (err) {
-        console.error("Fetch subscribed menus:", err);
+        const error = errorResponse(err, true);
+        toast.error(error?.message || "Please try again");
+        console.error("Fetch subscribed menus:", error);
       } finally {
         setLoadingMenus(false);
       }
@@ -66,11 +69,13 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
       setLoadingData(true);
       try {
         const response = await ControlsApi.getTenantRoleByUuid(roleUuid);
-        const decryptRes = decryption(response.data.data);
+        const decryptRes = successResponse(response, true);
         const data = decryptRes.data;
         setRoleData(data);
       } catch (err) {
-        console.error("Fetch subscribed menus:", err);
+        const error = errorResponse(err, true);
+        toast.error(error?.message || "Please try again");
+        console.error("Fet5ch edit role error:", error);
       } finally {
         setLoadingData(false);
       }
@@ -520,7 +525,7 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
           data: body,
         });
 
-        const decryptRes = decryption(res.data.data);
+        const decryptRes = successResponse(res, true);
 
         toast.success(decryptRes?.message || "Success");
       } else {
@@ -528,15 +533,15 @@ const RolesAdd = ({ mode = "add", roleUuid }) => {
           data: body,
         });
 
-        const decryptRes = decryption(res.data.data);
+        const decryptRes = successResponse(res, true);
 
         toast.success(decryptRes?.message || "Success");
       }
 
       router.push("/controls/roles");
-    } catch (error) {
-      const err = decryption(error, "error");
-      toast.error(err?.message || "Please try again");
+    } catch (err) {
+      const error = errorResponse(err, true);
+      toast.error(error?.message || "Please try again");
       console.error("Error creating/updating role:", error);
     }
   };

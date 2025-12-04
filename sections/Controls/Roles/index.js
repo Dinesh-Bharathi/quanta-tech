@@ -29,10 +29,10 @@ import { useConfirmation } from "@/context/ConfirmationContext";
 import { toast } from "sonner";
 
 import { useRouter } from "next/navigation";
-import { decryption } from "@/lib/encryption";
 import DataTable from "@/components/DataTable";
 import { usePermissions } from "@/hooks/usePermissions";
 import { PermissionGuard } from "@/components/permissions/PermissionGuard";
+import { errorResponse, successResponse } from "@/lib/response";
 
 const Roles = () => {
   const router = useRouter();
@@ -84,7 +84,7 @@ const Roles = () => {
 
     try {
       const res = await ControlsApi.tenantRoles(tentDetails?.tenant_uuid);
-      const decrypted = decryption(res?.data?.data);
+      const decrypted = successResponse(res, true);
 
       const data = decrypted?.data ?? [];
       setRolesList(data);
@@ -118,13 +118,14 @@ const Roles = () => {
             role_uuid
           );
 
-          const decrypted = decryption(res.data.data);
+          const decrypted = successResponse(res, true);
           toast.success(decrypted?.message || "Role deleted successfully!");
 
           getTenantRoles();
         } catch (err) {
-          const error = decryption(err, "error");
-          toast.error(error?.message || "Please try again!");
+          const error = errorResponse(err, true);
+          toast.error(error?.message || "Please try again");
+          console.error("Role delete error:", error);
         }
       },
     });

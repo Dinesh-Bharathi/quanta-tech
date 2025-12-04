@@ -26,33 +26,28 @@ import { useRouter, useSearchParams } from "next/navigation";
 import _ from "lodash";
 import AuthApi from "@/services/auth/api";
 import Loading from "@/app/loading";
+import { errorResponse, successResponse } from "@/lib/response";
+import { toast } from "sonner";
 
 export function TenantSelection() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const globalSessionUuid = searchParams.get("global_session_uuid");
   const srcFrom = searchParams.get("src");
   const isFromGoogle = _.isEqual(srcFrom, "google");
 
-  const { loginToTenant, tenantSelectionList } = useAuth();
-  const [tenants, setTenants] = useState(tenantSelectionList || []);
+  const { loginToTenant, logoutUser } = useAuth();
+  const [tenants, setTenants] = useState([]);
 
   const [fetchingTenantList, setFetchingTenantList] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (_.isEmpty(globalSessionUuid)) {
-      router.replace("/login");
-      return;
-    }
-
     const fetchTenantSelection = async () => {
       try {
-        const response = await AuthApi.getTenantSelectionList(
-          globalSessionUuid
-        );
-        let data = response?.data?.data?.tenants || [];
+        const response = await AuthApi.getTenantSelectionList();
+        const successRes = successResponse(response, true);
+        let data = successRes?.data.tenants || [];
 
         if (_.isEmpty(data)) {
           router.replace("/login");
@@ -65,31 +60,28 @@ export function TenantSelection() {
         }
 
         // ✅ AUTO LOGIN when only 1 tenant
-        if (data.length === 1) {
-          await loginToTenant({
-            global_session_uuid: globalSessionUuid,
-            tenant_user_uuid: data[0].tenant_user_uuid,
-          });
+        // if (data.length === 1) {
+        //   await loginToTenant({
+        //     tenant_user_uuid: data[0].tenant_user_uuid,
+        //   });
 
-          router.replace("/dashboard"); // or wherever you want to redirect
-          return; // 🚫 Do NOT close loader
-        }
+        //   router.replace("/dashboard");
+        //   return;
+        // }
 
         // Show tenant list when > 1
         setTenants(data);
         setFetchingTenantList(false);
       } catch (err) {
-        console.error("Failed to fetch tenant list", err);
+        const error = errorResponse(err, true);
+        console.error("Tenant select error:", error);
+        toast.error(error.message);
         router.replace("/login");
       }
     };
 
-    if (_.isEmpty(tenantSelectionList)) {
-      fetchTenantSelection();
-    } else {
-      setFetchingTenantList(false);
-    }
-  }, [globalSessionUuid, tenantSelectionList]);
+    fetchTenantSelection();
+  }, [isFromGoogle]);
 
   const isTenantSelectable = (tenant) => isFromGoogle || tenant.passwordMatched;
 
@@ -101,7 +93,6 @@ export function TenantSelection() {
 
     try {
       const success = await loginToTenant({
-        global_session_uuid: globalSessionUuid,
         tenant_user_uuid: tenant.tenant_user_uuid,
       });
 
@@ -117,9 +108,9 @@ export function TenantSelection() {
   };
 
   const handleLogout = () => {
-    router.replace("/login");
     setTenants([]);
     setError("");
+    logoutUser();
   };
 
   // Fullscreen Loader
@@ -135,7 +126,7 @@ export function TenantSelection() {
           <Building2 className="w-8 h-8 text-primary mx-auto mb-2" />
           <CardTitle className="text-2xl">Choose Your Workspace</CardTitle>
           <CardDescription>
-            You&apos;re part of multiple accounts
+            {tenants.length > 1 ? "You&apos;re part of multiple accounts" : ""}
           </CardDescription>
 
           {error && (
@@ -147,7 +138,11 @@ export function TenantSelection() {
         </CardHeader>
 
         <CardContent className="p-6 md:col-span-2">
-          <div className="grid sm:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto">
+          <div
+            className={`grid sm:grid-cols-${
+              tenants.length > 1 ? 2 : 1
+            } gap-3 max-h-[400px] overflow-y-auto`}
+          >
             {tenants.map((tenant) => (
               <button
                 key={tenant.tenant_user_uuid}

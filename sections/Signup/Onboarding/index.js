@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/form";
 import { CountryField } from "@/components/CustomCountry";
 import { StateField } from "@/components/CustomState";
+import { encryption } from "@/lib/encryption";
+import { errorResponse, successResponse } from "@/lib/response";
 
 const orgSchema = z.object({
   organizationName: z.string().min(2, "Organization name is required"),
@@ -71,23 +73,22 @@ const Onboarding = () => {
 
     try {
       setLoading(true);
+      const body = encryption(payload);
+      const res = await AuthApi.registerTenant(userUuid, { data: body });
+      const successRes = successResponse(res, true);
+      console.log("successRes", successRes);
 
-      const res = await AuthApi.registerTenant(userUuid, payload);
-
-      if (res.data?.success === false) {
-        toast.error(res.data.message || "Something went wrong");
+      if (successRes?.success === false) {
+        toast.error(successRes?.message || "Something went wrong");
         return;
       }
 
-      toast.success(
-        res.data?.message ||
-          "Organization setup complete! Free trial activated."
-      );
+      toast.success(successRes?.message || "Organization setup complete!");
 
-      router.push("/login");
+      router.push("/accesscheck");
     } catch (err) {
-      const backendMsg = err?.response?.data?.message || "Something went wrong";
-      toast.error(backendMsg);
+      const error = errorResponse(err, true);
+      toast.error(error?.message || "Please try again");
     } finally {
       setLoading(false);
     }

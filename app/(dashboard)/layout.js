@@ -8,9 +8,16 @@ import { cn } from "@/lib/utils";
 import Unauthorized from "../unauthorized/page";
 import Loading from "./loading";
 import { PermissionGuard } from "@/components/permissions/PermissionGuard";
+import { SubscriptionBanner } from "@/components/dashboard/subscription-banner";
 
 export default function DashboardLayout({ children }) {
-  const { tentDetails, user, isAccountSuspended } = useAuth();
+  const {
+    tentDetails,
+    user,
+    isAccountSuspended,
+    isAuthenticated,
+    subscriptionDetails,
+  } = useAuth();
   const { layoutConfig } = useThemeCustomization();
 
   if (isAccountSuspended) {
@@ -36,6 +43,9 @@ export default function DashboardLayout({ children }) {
             loadingFallback={<Loading />}
             fallback={<Unauthorized />}
           >
+            {isAuthenticated && (
+              <SubscriptionBanner subscriptionData={subscriptionDetails} />
+            )}
             {children}
           </PermissionGuard>
         </main>
@@ -80,6 +90,9 @@ export default function DashboardLayout({ children }) {
               loadingFallback={<Loading />}
               fallback={<Unauthorized />}
             >
+              {isAuthenticated && (
+                <SubscriptionBanner subscriptionData={subscriptionDetails} />
+              )}
               {children}
             </PermissionGuard>
           </main>
@@ -126,6 +139,9 @@ export default function DashboardLayout({ children }) {
             loadingFallback={<Loading />}
             fallback={<Unauthorized />}
           >
+            {isAuthenticated && (
+              <SubscriptionBanner subscriptionData={subscriptionDetails} />
+            )}
             {children}
           </PermissionGuard>
         </main>

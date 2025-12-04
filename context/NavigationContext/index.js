@@ -3,8 +3,8 @@
 import { createContext, useContext } from "react";
 import { useAuth } from "@/context/AuthContext";
 import AuthApi from "@/services/auth/api";
-import { decryption } from "@/lib/encryption";
 import { useQuery } from "@tanstack/react-query";
+import { successResponse } from "@/lib/response";
 
 const NavigationContext = createContext(null);
 export const useNavigation = () => useContext(NavigationContext);
@@ -21,7 +21,7 @@ export function NavigationProvider({ children }) {
         user.tenant_user_uuid,
         currentBranch.branch_uuid
       );
-      const decrypted = decryption(response.data?.data);
+      const decrypted = successResponse(response, true);
       if (!decrypted?.success) return { main: [], footer: [] };
       return {
         main: decrypted.data?.mainNavigation ?? [],
